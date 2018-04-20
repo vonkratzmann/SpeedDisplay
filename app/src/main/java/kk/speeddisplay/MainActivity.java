@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -20,15 +21,16 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
 
-    private Button button;
     private TextView textViewSpeed;
     private TextView textViewMaxSpeed;
     private LocationManager locationManager;
     private LocationListener locationListener;
     private float maxSpeed = 0;
-    SharedPreferences.Editor editor;
+    SharedPreferences sharedPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,15 +39,13 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        button = findViewById(R.id.button);
         textViewSpeed = findViewById(R.id.textViewSpeed);
         textViewMaxSpeed = findViewById(R.id.textViewMaxSpeed);
 
-        SharedPreferences sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
-        editor = sharedPref.edit();
+        sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
 
         float maxSpeed = sharedPref.getFloat(getString(R.string.savedMaxSpeed), 0);
-        textViewMaxSpeed.setText(String.format("%1$.1f km/hr", maxSpeed));
+        textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -76,10 +76,10 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{
                         Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET
                 }, 10);
-                return;
             }
+            configureGPS();
         } else {
-            configureButton();
+            configureGPS();
         }
     }
 
@@ -87,31 +87,30 @@ public class MainActivity extends AppCompatActivity {
     private void displayCheckMaxSpeed(float newSpeed) {
         if (newSpeed > maxSpeed) {
             maxSpeed = newSpeed;
+            SharedPreferences.Editor editor = sharedPref.edit();
             editor.putFloat(getString(R.string.savedMaxSpeed), maxSpeed);
-            textViewMaxSpeed.setText(String.format("%1$.1f km/hr", maxSpeed));
             editor.apply();
         }
-        textViewSpeed.setText(String.format("%1$.1f km/hr", newSpeed));
+        textViewSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", newSpeed));
     }
 
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case 10:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    configureButton();
+                    configureGPS();
         }
     }
 
-    private void configureButton() {
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                locationManager.requestLocationUpdates("gps", 1000, 0, locationListener);
-            }
-        });
-
+    private void configureGPS() {
+        try {
+            locationManager.requestLocationUpdates("gps", 1000, 0, locationListener);
+        } catch (SecurityException securityException) {
+            System.err.println("Write permission denied. Terminating.");
+            System.exit(1); // terminate the program
+        }
     }
 
     @Override
