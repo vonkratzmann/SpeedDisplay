@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewMaxSpeed;
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private float maxSpeed = 0;
-    SharedPreferences sharedPref;
+    private float maxSpeed = 0f;
+    private SharedPreferences sharedPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
 
-        float maxSpeed = sharedPref.getFloat(getString(R.string.savedMaxSpeed), 0);
+        float maxSpeed = sharedPref.getFloat(getString(R.string.savedMaxSpeed), 0f);
         textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -83,17 +83,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void displayCheckMaxSpeed(float newSpeed) {
         if (newSpeed > maxSpeed) {
             maxSpeed = newSpeed;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putFloat(getString(R.string.savedMaxSpeed), maxSpeed);
             editor.apply();
+            textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));                         //display new maximum speed
         }
-        textViewSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", newSpeed));
+        textViewSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", newSpeed));                                //display speed
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -128,7 +127,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.max_reset) {
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putFloat(getString(R.string.savedMaxSpeed), 0);
+            editor.apply();
+            textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f));
             return true;
         }
         return super.onOptionsItemSelected(item);
