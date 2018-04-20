@@ -126,12 +126,16 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.max_reset) {
-            SharedPreferences.Editor editor = sharedPref.edit();
-            editor.putFloat(getString(R.string.savedMaxSpeed), 0);
+        if (id == R.id.max_reset) {                                                 //reset maximum speed?
+            SharedPreferences.Editor editor = sharedPref.edit();                    //yes, save to shared preferences
+            editor.putFloat(getString(R.string.savedMaxSpeed), 0);                  //zero saved maximum speed
             editor.apply();
-            textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f));
+            textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f)); //zero display of maximum speed
+            return true;
+        }
+
+        if (id == R.id.quit) {                                                       //request to exit/quit?
+            System.exit(1);                                                          //yes, terminate the program
             return true;
         }
         return super.onOptionsItemSelected(item);

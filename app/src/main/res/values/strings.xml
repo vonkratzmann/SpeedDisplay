@@ -5,4 +5,5 @@
     <string name="speed">Speed</string>
     <string name="maxspeedtitle">Maximum Speed</string>
     <string name="savedMaxSpeed">savedMaxSpeed</string>
+    <string name="quit">Quit</string>
 </resources>

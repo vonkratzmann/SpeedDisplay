@@ -7,4 +7,9 @@
         android:orderInCategory="100"
         android:title="@string/max_reset"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/quit"
+        android:orderInCategory="200"
+        android:title="@string/quit"
+        app:showAsAction="never"/>
 </menu>
