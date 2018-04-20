@@ -1,7 +1,9 @@
 package kk.speeddisplay;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -21,9 +23,12 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
 
     private Button button;
-    private TextView textView;
+    private TextView textViewSpeed;
+    private TextView textViewMaxSpeed;
     private LocationManager locationManager;
     private LocationListener locationListener;
+    private float maxSpeed = 0;
+    SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,13 +38,20 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         button = findViewById(R.id.button);
-        textView = findViewById(R.id.textView);
+        textViewSpeed = findViewById(R.id.textViewSpeed);
+        textViewMaxSpeed = findViewById(R.id.textViewMaxSpeed);
+
+        SharedPreferences sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
+
+        float maxSpeed = sharedPref.getFloat(getString(R.string.savedMaxSpeed), 0);
+        textViewMaxSpeed.setText(String.format("%1$.1f km/hr", maxSpeed));
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                textView.setText(String.format("%1$.1f km/hr", location.getSpeed()));
+                displayCheckMaxSpeed(location.getSpeed());
             }
 
             @Override
@@ -71,20 +83,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    private void displayCheckMaxSpeed(float newSpeed) {
+        if (newSpeed > maxSpeed) {
+            maxSpeed = newSpeed;
+            editor.putFloat(getString(R.string.savedMaxSpeed), maxSpeed);
+            textViewMaxSpeed.setText(String.format("%1$.1f km/hr", maxSpeed));
+            editor.apply();
+        }
+        textViewSpeed.setText(String.format("%1$.1f km/hr", newSpeed));
+    }
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case 10:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     configureButton();
-                       }
+        }
     }
 
     private void configureButton() {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                locationManager.requestLocationUpdates("gps", 2000, 0, locationListener);
+                locationManager.requestLocationUpdates("gps", 1000, 0, locationListener);
             }
         });
 

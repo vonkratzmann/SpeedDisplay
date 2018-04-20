@@ -3,4 +3,6 @@
     <string name="action_settings">Settings</string>
     <string name="show_speed">Show Speed</string>
     <string name="speed">Speed</string>
+    <string name="maxspeedtitle">Maximum Speed</string>
+    <string name="savedMaxSpeed">savedMaxSpeed</string>
 </resources>
