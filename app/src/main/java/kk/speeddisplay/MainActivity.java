@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                displayCheckMaxSpeed(location.getSpeed());
+                displayCheckMaxSpeed(location.getSpeed());                              //get speed in metres/second
             }
 
             @Override
