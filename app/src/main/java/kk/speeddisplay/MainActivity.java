@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,13 +25,13 @@ import android.widget.TextView;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-
+    private static final String TAG = "MyActivity";
+    private Button button;
     private TextView textViewSpeed;
     private TextView textViewMaxSpeed;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
     private float maxSpeed = 0f;
     private SharedPreferences sharedPref;
+    private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,27 +48,7 @@ public class MainActivity extends AppCompatActivity {
         float maxSpeed = sharedPref.getFloat(getString(R.string.savedMaxSpeed), 0f);
         textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
 
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                displayCheckMaxSpeed(location.getSpeed());                              //get speed in metres/second
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                startActivity(intent);
-            }
-        };
+        mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -77,16 +58,33 @@ public class MainActivity extends AppCompatActivity {
                         Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET
                 }, 10);
             }
-            configureGPS();
+            getLocation();
         } else {
-            configureGPS();
+            getLocation();
         }
     }
 
+    private void getLocation() {
+        try {
+            mFusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new com.google.android.gms.tasks.OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                displayCheckMaxSpeed(location.getSpeed());
+                            }
+                        }
+                    });
+        } catch (SecurityException securityException) {
+            Log.e(TAG, getString(R.string.permission_denied));
+            System.exit(1); // terminate the program
+        }
+    }
     private void displayCheckMaxSpeed(float newSpeed) {
         if (newSpeed > maxSpeed) {
             maxSpeed = newSpeed;
-            SharedPreferences.Editor editor = sharedPref.edit();
+            SharedPreferences.Editor editor = sharedPref.edit();                                                  //save maximum speed
             editor.putFloat(getString(R.string.savedMaxSpeed), maxSpeed);
             editor.apply();
             textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));                         //display new maximum speed
@@ -99,16 +97,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case 10:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    configureGPS();
-        }
-    }
-
-    private void configureGPS() {
-        try {
-            locationManager.requestLocationUpdates("gps", 1000, 0, locationListener);
-        } catch (SecurityException securityException) {
-            System.err.println("Write permission denied. Terminating.");
-            System.exit(1); // terminate the program
+                    getLocation();
         }
     }
 
