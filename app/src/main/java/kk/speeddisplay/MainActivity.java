@@ -22,6 +22,10 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private float maxSpeed = 0f;
     private SharedPreferences sharedPref;
     private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
+    private LocationRequest mLocationRequest;
+    private LocationCallback mLocationCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +56,22 @@ public class MainActivity extends AppCompatActivity {
 
         mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
 
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(2);
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    displayCheckMaxSpeed(location.getSpeed());
+                }
+            }
+        };
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                     != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -66,22 +88,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void getLocation() {
         try {
-            mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new com.google.android.gms.tasks.OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                displayCheckMaxSpeed(location.getSpeed());
-                            }
-                        }
-                    });
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
         } catch (SecurityException securityException) {
             Log.e(TAG, getString(R.string.permission_denied));
             System.exit(1); // terminate the program
         }
     }
+
     private void displayCheckMaxSpeed(float newSpeed) {
+        newSpeed = newSpeed * 3600f / 1000f;                                                                        //convert from m/sec to km/hour
         if (newSpeed > maxSpeed) {
             maxSpeed = newSpeed;
             SharedPreferences.Editor editor = sharedPref.edit();                                                  //save maximum speed
