@@ -55,10 +55,7 @@ public class MainActivity extends AppCompatActivity {
         textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
 
         mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
-
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(2);
 
         mLocationCallback = new LocationCallback() {
             @Override
@@ -86,12 +83,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    protected void onResume() {
+        super.onResume();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(2000L);
+    }
+
+    protected void onPause() {
+        super.onPause();
+        mLocationRequest.setPriority(LocationRequest. PRIORITY_BALANCED_POWER_ACCURACY);
+        mLocationRequest.setInterval(30000L);                                       //set interval in milliseconds
+    }
+
+
     private void getLocation() {
         try {
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
         } catch (SecurityException securityException) {
             Log.e(TAG, getString(R.string.permission_denied));
-            System.exit(1); // terminate the program
+            finish(); // terminate the program
         }
     }
 
@@ -139,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.quit) {                                                       //request to exit/quit?
-            System.exit(1);                                                          //yes, terminate the program
+            finish();                                                          //yes, terminate the program
             return true;
         }
         return super.onOptionsItemSelected(item);
