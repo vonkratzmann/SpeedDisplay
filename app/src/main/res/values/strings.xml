@@ -2,7 +2,7 @@
     <string name="app_name">Speed</string>
     <string name="max_reset">Clear Maximum</string>
     <string name="show_speed">Show Speed</string>
-    <string name="speed">Speed</string>
+    <string name="speed">0.0 km/hr</string>
     <string name="maxspeedtitle">Maximum Speed</string>
     <string name="savedMaxSpeed">savedMaxSpeed</string>
     <string name="quit">Quit</string>

@@ -1,25 +1,19 @@
 package kk.speeddisplay;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
+import android.content.Context;;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.android.gms.location.LocationCallback;
@@ -30,10 +24,9 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MyActivity";
-    private Button button;
     private TextView textViewSpeed;
     private TextView textViewMaxSpeed;
-    private float maxSpeed = 0f;
+    private float maxSpeed;
     private SharedPreferences sharedPref;
     private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
@@ -42,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d (TAG, "onCreate");
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -64,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 for (Location location : locationResult.getLocations()) {
-                    displayCheckMaxSpeed(location.getSpeed());
+                    displayAndCheckMaxSpeed(location.getSpeed());
                 }
             }
         };
@@ -85,13 +79,16 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onResume() {
         super.onResume();
+
+        Log.d (TAG, "onResume");
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(2000L);
     }
 
     protected void onPause() {
         super.onPause();
-        mLocationRequest.setPriority(LocationRequest. PRIORITY_BALANCED_POWER_ACCURACY);
+        Log.d (TAG, "onPause");
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         mLocationRequest.setInterval(30000L);                                       //set interval in milliseconds
     }
 
@@ -105,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void displayCheckMaxSpeed(float newSpeed) {
+    private void displayAndCheckMaxSpeed(float newSpeed) {
         newSpeed = newSpeed * 3600f / 1000f;                                                                        //convert from m/sec to km/hour
         if (newSpeed > maxSpeed) {
             maxSpeed = newSpeed;
@@ -142,14 +139,14 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.max_reset) {                                                 //reset maximum speed?
             SharedPreferences.Editor editor = sharedPref.edit();                    //yes, save to shared preferences
-            editor.putFloat(getString(R.string.savedMaxSpeed), 0);                  //zero saved maximum speed
+            editor.putFloat(getString(R.string.savedMaxSpeed), 0f);                                   //zero saved maximum speed
             editor.apply();
             textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f)); //zero display of maximum speed
             return true;
         }
 
         if (id == R.id.quit) {                                                       //request to exit/quit?
-            finish();                                                          //yes, terminate the program
+            finish();                                                                //yes, terminate the program
             return true;
         }
         return super.onOptionsItemSelected(item);
