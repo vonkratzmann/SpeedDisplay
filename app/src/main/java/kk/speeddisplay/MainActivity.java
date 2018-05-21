@@ -1,7 +1,7 @@
 package kk.speeddisplay;
 
 import android.Manifest;
-import android.content.Context;;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewSpeed;
     private TextView textViewMaxSpeed;
     private float maxSpeed;
-    private SharedPreferences sharedPref;
+    private SharedPreferences mSharedPref;
     private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d (TAG, "onCreate");
+        Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -43,10 +43,7 @@ public class MainActivity extends AppCompatActivity {
         textViewSpeed = findViewById(R.id.textViewSpeed);
         textViewMaxSpeed = findViewById(R.id.textViewMaxSpeed);
 
-        sharedPref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
-
-        float maxSpeed = sharedPref.getFloat(getString(R.string.savedMaxSpeed), 0f);
-        textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
+        mSharedPref = getPreferences(Context.MODE_PRIVATE);
 
         mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
         mLocationRequest = new LocationRequest();
@@ -77,17 +74,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+   protected void onStart() {
+        super.onStart();
+       Log.d(TAG, "onStart");
+
+       maxSpeed = mSharedPref.getFloat(getString(R.string.saved_max_speed), 0f);
+       Log.d(TAG, "SharedPref MaxSpeed: " + Float.toString(maxSpeed));
+       textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
+   }
+
     protected void onResume() {
         super.onResume();
 
-        Log.d (TAG, "onResume");
+        Log.d(TAG, "onResume");
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(2000L);
     }
 
     protected void onPause() {
         super.onPause();
-        Log.d (TAG, "onPause");
+        Log.d(TAG, "onPause");
         mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         mLocationRequest.setInterval(30000L);                                       //set interval in milliseconds
     }
@@ -105,10 +111,12 @@ public class MainActivity extends AppCompatActivity {
     private void displayAndCheckMaxSpeed(float newSpeed) {
         newSpeed = newSpeed * 3600f / 1000f;                                                                        //convert from m/sec to km/hour
         if (newSpeed > maxSpeed) {
+            Log.d(TAG, "New maxSpeed: " + Float.toString(maxSpeed));
             maxSpeed = newSpeed;
-            SharedPreferences.Editor editor = sharedPref.edit();                                                  //save maximum speed
-            editor.putFloat(getString(R.string.savedMaxSpeed), maxSpeed);
-            editor.apply();
+            SharedPreferences.Editor mEditor = mSharedPref.edit();                                                  //save maximum speed                 //yes, save to shared preferences
+            mEditor.clear();
+            mEditor.putFloat(getString(R.string.saved_max_speed), maxSpeed);
+            mEditor.apply();
             textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));                         //display new maximum speed
         }
         textViewSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", newSpeed));                                //display speed
@@ -138,9 +146,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.max_reset) {                                                 //reset maximum speed?
-            SharedPreferences.Editor editor = sharedPref.edit();                    //yes, save to shared preferences
-            editor.putFloat(getString(R.string.savedMaxSpeed), 0f);                                   //zero saved maximum speed
-            editor.apply();
+            SharedPreferences.Editor mEditor = mSharedPref.edit();                    //yes, save to shared preferences
+            mEditor.clear();
+            mEditor.putFloat(getString(R.string.saved_max_speed), 0f);                                   //zero saved maximum speed
+            mEditor.apply();
+            maxSpeed = 0f;
             textViewMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f)); //zero display of maximum speed
             return true;
         }

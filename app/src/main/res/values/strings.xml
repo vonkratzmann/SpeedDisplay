@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">Speed</string>
-    <string name="max_reset">Clear Maximum</string>
+    <string name="max_reset_menu_item">Clear Maximum</string>
     <string name="show_speed">Show Speed</string>
     <string name="speed">0.0 km/hr</string>
-    <string name="maxspeedtitle">Maximum Speed</string>
-    <string name="savedMaxSpeed">savedMaxSpeed</string>
+    <string name="max_speed_title">MaximumSpeed</string>
+    <!-- Shared Preference key  -->
+    <string name="saved_max_speed">savedMaxSpeed</string>
     <string name="quit">Quit</string>
     <string name="permission_denied">Permission Denied</string>
 </resources>
