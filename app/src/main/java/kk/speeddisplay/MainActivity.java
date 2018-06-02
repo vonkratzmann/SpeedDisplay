@@ -1,4 +1,7 @@
 package kk.speeddisplay;
+/*
+ * Speed Display v1.0
+ */
 
 import android.Manifest;
 import android.content.Context;
