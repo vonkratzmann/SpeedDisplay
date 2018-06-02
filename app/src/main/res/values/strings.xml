@@ -1,11 +1,29 @@
 <resources>
+
     <string name="app_name">Speed</string>
+
+    <!-- menu titles -->
     <string name="max_reset_menu_item">Clear Maximum</string>
+
+    <!-- menu items -->
     <string name="show_speed">Show Speed</string>
+    <string name="quit">Quit</string>
+
+    <!-- text/edit views default values and text -->
     <string name="speed">0.0 km/hr</string>
     <string name="max_speed_title">MaximumSpeed</string>
-    <!-- Shared Preference key  -->
-    <string name="saved_max_speed">savedMaxSpeed</string>
-    <string name="quit">Quit</string>
+
+    <!-- Shared Preference keys  -->
+    <string name="pref_saved_max_speed_key">savedMaxSpeed</string>
+    <string name="pref_activity_active_update_rate_key">AppActive</string>
+    <string name="pref_activity_not_active_update_rate_key">AppNotActive</string>
+
+    <!--display formatting -->
+    <string name="units_and_number_of_decimals">%1$.1f km/hr</string>
+
+
+    <!-- error strings -->
+    <string name="error">Error</string>
     <string name="permission_denied">Permission Denied</string>
+    <string name="exiting">Exiting application</string>
 </resources>
