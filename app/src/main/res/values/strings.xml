@@ -1,25 +1,45 @@
 <resources>
-
-    <string name="app_name">Speed</string>
+    <!-- Main activity strings -->
+    <string name="main_activity_title">Speed</string>
 
     <!-- menu titles -->
     <string name="max_reset_menu_item">Clear Maximum</string>
 
     <!-- menu items -->
     <string name="show_speed">Show Speed</string>
+    <string name="action_settings">Settings</string>
     <string name="quit">Quit</string>
 
     <!-- text/edit views default values and text -->
     <string name="speed">0.0 km/hr</string>
     <string name="max_speed_title">MaximumSpeed</string>
 
+
+    <!-- Settings activity strings -->
+    <string name="settings_activity_title">Settings</string>
+
+
+    <!-- Shared Preferences -->
     <!-- Shared Preference keys  -->
     <string name="pref_saved_max_speed_key">savedMaxSpeed</string>
     <string name="pref_activity_active_update_rate_key">AppActive</string>
     <string name="pref_activity_not_active_update_rate_key">AppNotActive</string>
 
+    <string name="pref_saved_max_speed_title">Maximum SpeedAppActive</string>
+    <string name="pref_activity_active_update_rate_title">Active Activity Update Rate</string>
+    <string name="pref_activity_not_active_update_rate_title">Non Active Activity Update Rate</string>
+
+    <string name="pref_summary">Summary</string>
+    <string name="pref_dialog_title_active">Dialog Active Title</string>
+    <string name="pref_dialog_title_not_active">Dialog Not Active Title</string>
+
     <!--display formatting -->
     <string name="units_and_number_of_decimals">%1$.1f km/hr</string>
+
+    <!-- Color options -->
+    <string name="pref_color_red_value" translatable="false">red</string>
+    <string name="pref_color_blue_value" translatable="false">blue</string>
+    <string name="pref_color_green_value" translatable="false">green</string>
 
 
     <!-- error strings -->

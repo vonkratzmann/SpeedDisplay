@@ -5,6 +5,7 @@ package kk.speeddisplay;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -17,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -65,11 +67,11 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        tvCurrentSpeed = findViewById(R.id.tv_CurrentSpeed);
-        tvMaxSpeed = findViewById(R.id.tv_MaxSpeed);
+        tvCurrentSpeed = (TextView) findViewById(R.id.tv_CurrentSpeed);
+        tvMaxSpeed = (TextView) findViewById(R.id.tv_MaxSpeed);
 
         /* set up fused location client, which is API from Google Play Services  */
         mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
@@ -93,6 +95,49 @@ public class MainActivity extends AppCompatActivity {
         /* read settings form shared preferences and update location provider and screen */
         setupSharedPreferences();
         checkPermissions();
+    }
+
+    /**
+     * Methods for setting up the menu
+     **/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
+        MenuInflater inflater = getMenuInflater();
+        /* Use the inflater's inflate method to inflate our visualizer_menu layout to this menu */
+        inflater.inflate(R.menu.menu_main, menu);
+        /* Return true so that the visualizer_menu is displayed in the Toolbar */
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if (id == R.id.max_reset) {                                                 //reset maximum speed?
+            SharedPreferences.Editor mEditor = mSharedPref.edit();                    //yes, save to shared preferences
+            mEditor.clear();
+            mEditor.putFloat(getString(R.string.pref_saved_max_speed_key), 0f);                                   //zero saved maximum speed
+            mEditor.apply();
+            maxSpeed = 0f;
+            tvMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f)); //zero display of maximum speed
+            return true;
+        }
+
+        if (id == R.id.action_settings) {
+            Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
+            startActivity(startSettingsActivity);
+            return true;
+        }
+        if (id == R.id.quit) {                                                       //request to exit/quit?
+            finish();                                                                //yes, terminate the program
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -126,11 +171,13 @@ public class MainActivity extends AppCompatActivity {
      * image exists. When this applet attempts to draw the image on
      */
     private void setupSharedPreferences() {
-        mSharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         /* Get all of the values from shared preferences to set it up */
-        setupSharedPrefMaxSpeed();
-        setupSharedPrefAppActive();
-        setupSharedPrefAppNotActive();
+
+
+        //setupSharedPrefMaxSpeed();
+        //setupSharedPrefAppActive();
+        //setupSharedPrefAppNotActive();
     }
 
     /**
@@ -253,37 +300,6 @@ public class MainActivity extends AppCompatActivity {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     getLocation();
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        if (id == R.id.max_reset) {                                                 //reset maximum speed?
-            SharedPreferences.Editor mEditor = mSharedPref.edit();                    //yes, save to shared preferences
-            mEditor.clear();
-            mEditor.putFloat(getString(R.string.pref_saved_max_speed_key), 0f);                                   //zero saved maximum speed
-            mEditor.apply();
-            maxSpeed = 0f;
-            tvMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f)); //zero display of maximum speed
-            return true;
-        }
-
-        if (id == R.id.quit) {                                                       //request to exit/quit?
-            finish();                                                                //yes, terminate the program
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }
 

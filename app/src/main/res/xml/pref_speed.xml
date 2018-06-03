@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+
+        android:key="@string/pref_activity_active_update_rate_key"
+        android:summary="@string/pref_summary"
+        android:title="@string/pref_activity_active_update_rate_title"/>
+
+    <EditTextPreference
+
+        android:key="@string/pref_activity_not_active_update_rate_key"
+        android:summary="@string/pref_summary"
+        android:title="@string/pref_activity_not_active_update_rate_title"/>
+
+</PreferenceScreen>
