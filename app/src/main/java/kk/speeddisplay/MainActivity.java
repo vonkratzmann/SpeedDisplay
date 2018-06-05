@@ -65,11 +65,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        tvCurrentSpeed = (TextView) findViewById(R.id.tv_CurrentSpeed);
-        tvMaxSpeed = (TextView) findViewById(R.id.tv_MaxSpeed);
+        tvCurrentSpeed = findViewById(R.id.tv_CurrentSpeed);
+        tvMaxSpeed = findViewById(R.id.tv_MaxSpeed);
 
         /* set up fused location client, which is API from Google Play Services  */
         mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
         SharedPreferences.Editor ed = sp.edit();
         ed.putBoolean(getString(R.string.pref_activity_state_key), true);
-        ed.commit();
+        ed.apply();
     }
 
     /**
@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
         SharedPreferences.Editor ed = sp.edit();
         ed.putBoolean(getString(R.string.pref_activity_state_key), false);
-        ed.commit();
+        ed.apply();
     }
 
     @Override
@@ -345,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
      * Checks state of activity ie is it running by accessing a shared preferences key
      * which is set to true by onResume() and set to false by onPause()
      *
-     * @return
+     * @return true if activity is running or false if not running
      */
     boolean isActivityRunning() {
         SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);

@@ -8,7 +8,8 @@
         android:key="@string/pref_running_update_rate_key"
         android:singleLine="false"
         android:summary="@string/pref_running_update_rate_summary"
-        android:title="@string/pref_running_update_rate_title"/>
+        android:title="@string/pref_running_update_rate_title"
+        tools:singleLine="false"/>
 
     <EditTextPreference
         android:defaultValue="@string/pref_not_running_update_rate_default"
@@ -16,6 +17,7 @@
         android:key="@string/pref_not_running_update_rate_key"
         android:singleLine="false"
         android:summary="@string/pref_not_running_update_rate_summary"
-        android:title="@string/pref_not_running_update_rate_title"/>
+        android:title="@string/pref_not_running_update_rate_title"
+        tools:singleLine="false"/>
 
 </PreferenceScreen>

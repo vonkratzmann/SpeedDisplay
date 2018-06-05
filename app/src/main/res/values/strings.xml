@@ -27,11 +27,11 @@
 
     <string name="pref_saved_max_speed_title">Maximum Speed</string>
 
-    <string name="pref_running_update_rate_title">Update Rate When Speed Visible</string>
+    <string name="pref_running_update_rate_title">Update Rate If Speed Visible</string>
     <string name="pref_running_update_rate_summary">Rate at which the speed is updated when the application is displayed.</string>
     <string name="pref_running_update_rate_default" translatable="false">2</string>
 
-    <string name="pref_not_running_update_rate_title">Update Rate When Speed Not Visible</string>
+    <string name="pref_not_running_update_rate_title">Update Rate If Speed Not Visible</string>
     <string name="pref_not_running_update_rate_summary">Rate at which the speed is updated when the application is not displayed.</string>
     <string name="pref_not_running_update_rate_default" translatable="false">30</string>
 
