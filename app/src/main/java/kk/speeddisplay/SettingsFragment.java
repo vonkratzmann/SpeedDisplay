@@ -52,7 +52,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
      * @param value      The value that the preference was updated to
      */
     private void setPreferenceSummary(Preference preference, String value) {
-        // COMPLETED (3) Don't forget to add code here to properly set the summary for an EditTextPreference
         if (preference instanceof ListPreference) {
             // For list preferences, figure out the label of the selected value
             ListPreference listPreference = (ListPreference) preference;
@@ -71,17 +70,32 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         /* Figure out which preference has changed */
         Preference preference = findPreference(key);
-
+        if (null != preference) {
+            /* Updates the summary for the preference, ignore checkboxes as do not have summary */
+            if (!(preference instanceof CheckBoxPreference)) {
+                String value = sharedPreferences.getString(preference.getKey(), "");
+                setPreferenceSummary(preference, value);
+            }
+        }
     }
 
+    /**
+     * On change, checks valid floating point number has been entered for update rate fields
+     *
+     * @param preference preference which generated the change
+     * @param newValue   new value entered
+     * @return true if number valid, otherwise false
+     */
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         Toast error = Toast.makeText(getContext(), "Invalid number format", Toast.LENGTH_SHORT);
 
         String runningRateKey = getString(R.string.pref_running_update_rate_key);
-        if (preference.getKey().equals(runningRateKey)) {
-            String rate = (String) newValue;
+        String notRunningRateKey = getString(R.string.pref_not_running_update_rate_key);
 
+        if (preference.getKey().equals(runningRateKey) || preference.getKey().equals(notRunningRateKey)) {
+            String rate = (String) newValue;
+            /* check valid entry */
             if (checkFloatFormat(rate)) {
                 return true;
             } else {
