@@ -18,20 +18,28 @@
     <!-- Settings activity strings -->
     <string name="settings_activity_title">Settings</string>
 
-
     <!-- Shared Preferences -->
     <!-- Shared Preference keys  -->
-    <string name="pref_saved_max_speed_key">savedMaxSpeed</string>
-    <string name="pref_activity_active_update_rate_key">AppActive</string>
-    <string name="pref_activity_not_active_update_rate_key">AppNotActive</string>
+    <string name="pref_saved_max_speed_key" translatable="false">savedMaxSpeed</string>
+    <string name="pref_running_update_rate_key" translatable="false">AppRunning</string>
+    <string name="pref_not_running_update_rate_key" translatable="false">AppNotRunning</string>
+    <string name="pref_activity_state_key" translatable="false">ActivityState</string>
 
-    <string name="pref_saved_max_speed_title">Maximum SpeedAppActive</string>
-    <string name="pref_activity_active_update_rate_title">Active Activity Update Rate</string>
-    <string name="pref_activity_not_active_update_rate_title">Non Active Activity Update Rate</string>
+    <string name="pref_saved_max_speed_title">Maximum Speed</string>
 
-    <string name="pref_summary">Summary</string>
-    <string name="pref_dialog_title_active">Dialog Active Title</string>
-    <string name="pref_dialog_title_not_active">Dialog Not Active Title</string>
+    <string name="pref_running_update_rate_title">Update Rate When Speed Visible</string>
+    <string name="pref_running_update_rate_summary">Rate at which the speed is updated when the application is displayed.</string>
+    <string name="pref_running_update_rate_default" translatable="false">2</string>
+
+    <string name="pref_not_running_update_rate_title">Update Rate When Speed Not Visible</string>
+    <string name="pref_not_running_update_rate_summary">Rate at which the speed is updated when the application is not displayed.</string>
+    <string name="pref_not_running_update_rate_default" translatable="false">30</string>
+
+    <string name="pref_dialog_title_running">Dialog Running Title</string>
+    <string name="pref_dialog_title_not_running">Dialog Not Running Title</string>
+
+    <string name="pref_activity_update_rate_dialog">Enter the time in seconds"</string>
+
 
     <!--display formatting -->
     <string name="units_and_number_of_decimals">%1$.1f km/hr</string>
@@ -41,9 +49,11 @@
     <string name="pref_color_blue_value" translatable="false">blue</string>
     <string name="pref_color_green_value" translatable="false">green</string>
 
-
     <!-- error strings -->
     <string name="error">Error</string>
     <string name="permission_denied">Permission Denied</string>
     <string name="exiting">Exiting application</string>
+    <string name="title_activity_settings2">Settings</string>
+    <string name="invalid_number_format">Please select a number greater than zero</string>
+
 </resources>
