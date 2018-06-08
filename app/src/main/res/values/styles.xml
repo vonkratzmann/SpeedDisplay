@@ -37,10 +37,9 @@
     <style name="MediumTextViewHeading" parent="Theme.AppCompat.Light">
         <item name="android:textSize">@dimen/medium_text_size</item>
         <item name="android:padding">@dimen/medium_padding</item>
-        <item name="android:background">@color/colorPrimaryDark</item>
+        <item name="android:background">@color/colorPrimary</item>
         <item name="android:textColor">@color/White</item>
         <item name="android:layout_margin">12dp</item>
-
     </style>
 
     <style name="SmallTextView" parent="Theme.AppCompat.Light">
@@ -48,7 +47,6 @@
         <item name="android:padding">@dimen/small_padding</item>
         <item name="android:background">@color/colorPrimary</item>
         <item name="android:textColor">@color/White</item>
-
     </style>
 
 </resources>
