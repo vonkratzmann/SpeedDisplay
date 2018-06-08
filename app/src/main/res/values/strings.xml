@@ -12,7 +12,7 @@
 
     <!-- text/edit views default values and text -->
     <string name="speed">0.0 km/hr</string>
-    <string name="max_speed_title">MaximumSpeed</string>
+    <string name="max_speed_title">Maximum Speed</string>
 
 
     <!-- Settings activity strings -->

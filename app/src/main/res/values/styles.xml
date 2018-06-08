@@ -13,7 +13,42 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <!-- Impacts action bar text colour-->
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+    <!-- impacts popups such as menus-->
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+
+    <style name="LargeTextView" parent="Theme.AppCompat.Light">
+        <item name="android:textSize">@dimen/large_text_size</item>
+        <item name="android:padding">@dimen/large_padding</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/White</item>
+    </style>
+
+    <style name="MediumTextView" parent="Theme.AppCompat.Light">
+        <item name="android:textSize">@dimen/medium_text_size</item>
+        <item name="android:padding">@dimen/medium_padding</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/White</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:layout_marginBottom">64dp</item>
+    </style>
+
+    <style name="MediumTextViewHeading" parent="Theme.AppCompat.Light">
+        <item name="android:textSize">@dimen/medium_text_size</item>
+        <item name="android:padding">@dimen/medium_padding</item>
+        <item name="android:background">@color/colorPrimaryDark</item>
+        <item name="android:textColor">@color/White</item>
+        <item name="android:layout_margin">12dp</item>
+
+    </style>
+
+    <style name="SmallTextView" parent="Theme.AppCompat.Light">
+        <item name="android:textSize">@dimen/small_text_size</item>
+        <item name="android:padding">@dimen/small_padding</item>
+        <item name="android:background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/White</item>
+
+    </style>
 
 </resources>
