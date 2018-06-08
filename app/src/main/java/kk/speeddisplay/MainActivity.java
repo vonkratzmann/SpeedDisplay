@@ -4,7 +4,6 @@ package kk.speeddisplay;
  */
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -20,7 +19,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -86,7 +84,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 /* process all locations provided */
                 for (Location location : locationResult.getLocations()) {
                     float speed = location.getSpeed();
-                    displaySpeed(speed);
+                    /* convert speed from metres/sec to km/hour */
+                    speed = speed * 3600f /1000f;
+                    /* display the speed */
+                    tvCurrentSpeed.setText(String.format(Locale.UK, getString(R.string.units_and_number_of_decimals), speed));
                     checkMaxSpeed(speed);
                 }
             }
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             tvMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f));
             return true;
         }
-        /* check if request to navigate to the settings scren */
+        /* check if request to navigate to the settings screen */
         if (id == R.id.action_settings) {
             Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
             startActivity(startSettingsActivity);
@@ -212,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
      * @param key               preference key
      */
     private void updatePrefRunningRate(SharedPreferences sharedPreferences, String key) {
-        /* get the rate and convert to milliseconds and save it */
+        /* get the rate and convert to milliseconds and save it, as update provider requires milliseconds */
         String updateRate = sharedPreferences.getString(key, RunningUpdateRateDefault);
         Float rate;
         if (checkFloatFormat(updateRate)) {
@@ -244,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
      * @param key               preference key
      */
     private void updatePrefNotRunningRate(SharedPreferences sharedPreferences, String key) {
-        /* get the rate and convert to milliseconds and save it*/
+        /* get the rate and convert to milliseconds and save it, as update provider requires milliseconds */
         String updateRate = sharedPreferences.getString(key, NotRunningUpdateRateDefault);
         Float rate;
         if (checkFloatFormat(updateRate)) {
@@ -254,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
         Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
 
-        /* convert to milliseconds and store as a long*/
+        /* convert to milliseconds and store as a long as update provider requires milliseconds */
         rate = rate * 1000f;
         activityNotRunningUpdateRate = rate.longValue();
 
@@ -272,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
      * (why anybody would want such a big number, I don't know)
      *
      * @param textNumber String which represents a floating point number
-     * @return true if strings representa valid float number
+     * @return true if strings represents valid float number
      */
     public static boolean checkFloatFormat(String textNumber) {
         try {
@@ -367,18 +368,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     + " " + getString(R.string.exiting), Toast.LENGTH_LONG).show();
             finish(); // terminate the program
         }
-    }
-
-    /**
-     * Displays the speed, but first converts from meters per second to kilometers per hour
-     *
-     * @param newSpeed speed to be displayed in metres per second
-     */
-    private void displaySpeed(float newSpeed) {
-        /* convert from m/sec to km/hour */
-        newSpeed = newSpeed * 3600f / 1000f;
-        /* display speed in km/hour */
-        tvCurrentSpeed.setText(String.format(Locale.UK, getString(R.string.units_and_number_of_decimals), newSpeed));
     }
 
     /**
