@@ -297,27 +297,6 @@ public class MainActivity extends AppCompatActivity implements
         }*/
     }
 
-    /**
-     * Checks if speed above previously stored maximum speed
-     * if so save the new maximum speed and display the maximum speed
-     *
-     * @param speed latest speed from the location provider
-     */
-    private void checkMaxSpeed(float speed) {
-        if (speed > mMaxSpeed) {
-            /* we have a new maximum speed */
-            mMaxSpeed = speed;
-            Log.d(TAG, "checkMaxSpeed mMaxSpeed: " + mMaxSpeed);
-            /* save maximum speed to shared preferences */
-            SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor mEditor = mSharedPref.edit();
-            mEditor.clear().putFloat(getString(R.string.pref_saved_max_speed_key),
-                    mMaxSpeed).apply();
-            /* display new maximum speed */
-            mMaxSpeedTextView.setText(String.format(Locale.UK, getResources()
-                    .getString(R.string.units_and_number_of_decimals), mMaxSpeed));
-        }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -361,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements
             /* display the speed */
             mCurrentSpeedTextView.setText(String.format(Locale.UK,
                     getString(R.string.units_and_number_of_decimals), speed));
-            checkMaxSpeed(speed);
+           // checkMaxSpeed(speed); //kk moved to service
         }
     }
 
