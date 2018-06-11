@@ -4,7 +4,10 @@ package kk.speeddisplay;
  */
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -13,6 +16,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -28,34 +32,44 @@ import com.google.android.gms.location.LocationResult;
 
 import java.util.Locale;
 
+import static java.lang.String.valueOf;
+
 /**
  * MainActivity
  * <p>
  */
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MainActivity extends AppCompatActivity implements
+        SharedPreferences.OnSharedPreferenceChangeListener {
 
     /* get a tag for output debugging */
     private final static String TAG = MainActivity.class.getSimpleName();
 
     /* displays current speed from the location provider */
-    private TextView tvCurrentSpeed;
+    private TextView mCurrentSpeedTextView;
 
     /* displays maximum speed recorded to date, max speed is saved in the shared preferences */
-    private TextView tvMaxSpeed;
+    private TextView mMaxSpeedTextView;
+
+    /* get updates from background task checking for location updates */
+    private MyBroadcastReceiver mBroadcastReceiver;
+
+    Intent mIntentService;
+
+    private float mMaxSpeed;
 
     /* update intervals at which the activity will receive location updates,
+     * separate update intervals for when the activity is running and not running
      * these are saved in the shared preferences
      */
-    private float maxSpeed;
-    private long activityRunningUpdateRate;
-    private final static String RunningUpdateRateDefault = "2";
+    private long mActivityRunningUpdateRate;
+    /* Default rate for location updates when the app running in milliseconds */
+    protected final static Long RUNNING_UPDATE_RATE_DEFAULT = 2000L;
 
-    private long activityNotRunningUpdateRate;
-    private final static String NotRunningUpdateRateDefault = "30";
+    private long mActivityNotRunningUpdateRate;
+    /* Default rate for location updates requested when the app not running in milliseconds */
+    protected final static Long NOT_RUNNING_UPDATE_RATE_DEFAULT = 3500L;
 
     private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest mLocationRequest;
-    private LocationCallback mLocationCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,83 +80,20 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        tvCurrentSpeed = findViewById(R.id.tv_CurrentSpeed);
-        tvMaxSpeed = findViewById(R.id.tv_MaxSpeed);
+        mCurrentSpeedTextView = findViewById(R.id.tv_CurrentSpeed);
+        mMaxSpeedTextView = findViewById(R.id.tv_MaxSpeed);
 
-        /* set up fused location client, which is API from Google Play Services  */
-        mFusedLocationClient = com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
-        /* use the location request to set up the parameters for the fused location provider */
-        mLocationRequest = new LocationRequest();
+        mBroadcastReceiver = new MyBroadcastReceiver();
 
-        mLocationCallback = new LocationCallback() {
-            /* LocationResult a data class representing a geographic location result from the fused location provider */
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                if (locationResult == null) {
-                    return;
-                }
-                /* process all locations provided */
-                for (Location location : locationResult.getLocations()) {
-                    float speed = location.getSpeed();
-                    /* convert speed from metres/sec to km/hour */
-                    speed = speed * 3600f /1000f;
-                    /* display the speed */
-                    tvCurrentSpeed.setText(String.format(Locale.UK, getString(R.string.units_and_number_of_decimals), speed));
-                    checkMaxSpeed(speed);
-                }
-            }
-        };
+        //register broadcast receiver
+        IntentFilter intentFilter = new IntentFilter(BackgroundGetLocation
+                .ACTION_UpdateFromBackground);
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+        registerReceiver(mBroadcastReceiver, intentFilter);
+
         /* read settings form shared preferences and update location provider and screen */
         setupSharedPreferences();
         checkPermissions();
-    }
-
-    /**
-     * Methods for setting up the menu
-     **/
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
-        MenuInflater inflater = getMenuInflater();
-        /* Use the inflater's inflate method to inflate our visualizer_menu layout to this menu */
-        inflater.inflate(R.menu.menu_main, menu);
-        /* Return true so that the visualizer_menu is displayed in the Toolbar */
-        return true;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        /* check if request to reset maximum speed */
-        if (id == R.id.max_reset) {
-            /* save the new speed in shared preferences */
-            SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor mEditor = mSharedPref.edit();
-            mEditor.clear();
-            mEditor.putFloat(getString(R.string.pref_saved_max_speed_key), 0f);
-            mEditor.apply();
-            /* display the zeroed speed */
-            maxSpeed = 0f;
-            tvMaxSpeed.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f));
-            return true;
-        }
-        /* check if request to navigate to the settings screen */
-        if (id == R.id.action_settings) {
-            Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
-            startActivity(startSettingsActivity);
-            return true;
-        }
-        /* check if request to exit */
-        if (id == R.id.quit) {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -157,10 +108,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
+                    != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_COARSE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET
                 }, 10);
             }
             getLocation();
@@ -175,9 +129,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private void setupSharedPreferences() {
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         /* Get the values from shared preferences and store in appropriate variables */
-        updatePrefMaxSpeed();
-        updatePrefRunningRate(mSharedPref, getString(R.string.pref_running_update_rate_key));
-        updatePrefNotRunningRate(mSharedPref, getString(R.string.pref_not_running_update_rate_key));
+        getPrefMaxSpeed();
+        getPrefRunningRate(mSharedPref, getString(R.string.pref_running_update_rate_key));
+        getPrefNotRunningRate(mSharedPref, getString(R.string.pref_not_running_update_rate_key));
         /* register listener here for any changes and unregister in onDestroy */
         mSharedPref.registerOnSharedPreferenceChangeListener(this);
     }
@@ -185,87 +139,195 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         if (key.equals(getString(R.string.pref_running_update_rate_key))) {
-            updatePrefRunningRate(sharedPreferences, key);
+            getPrefRunningRate(sharedPreferences, key);
         } else if (key.equals(getString(R.string.pref_not_running_update_rate_key))) {
-            updatePrefNotRunningRate(sharedPreferences, key);
+            getPrefNotRunningRate(sharedPreferences, key);
         }
     }
 
     /**
-     * Retrieves saved maximum speed detected t from Shared preferences
+     * Retrieves saved maximum speed from Shared preferences
      * and then displays this speed
      */
-    private void updatePrefMaxSpeed() {
+    private void getPrefMaxSpeed() {
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        maxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
-        Log.d(TAG, "updatePrefMaxSpeed maxSpeed: " + Float.toString(maxSpeed));
+        mMaxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
+        Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(mMaxSpeed));
         /* display max speed */
-        tvMaxSpeed.setText(String.format(Locale.UK, getString(R.string.units_and_number_of_decimals), maxSpeed));
+        mMaxSpeedTextView.setText(String.format(Locale.UK,
+                getString(R.string.units_and_number_of_decimals), mMaxSpeed));
     }
 
     /**
      * Updates rate at which location provider provides updates when the activity is running
      * gets the new rate fom the share preferences
-     * checks valid format
-     * converts it to milliseconds and saves it
+     * converts it to milliseconds and saves it as a long
+     * in the rate variable
      *
      * @param sharedPreferences SharedPreference object where preferences are stored
      * @param key               preference key
      */
-    private void updatePrefRunningRate(SharedPreferences sharedPreferences, String key) {
-        /* get the rate and convert to milliseconds and save it, as update provider requires milliseconds */
-        String updateRate = sharedPreferences.getString(key, RunningUpdateRateDefault);
-        Float rate;
-        if (checkFloatFormat(updateRate)) {
-            rate = Float.valueOf(updateRate);
-        } else {
-            rate = Float.valueOf(RunningUpdateRateDefault);
-        }
-        Log.d(TAG, "updatePrefRunningRate rate: " + rate);
+    private void getPrefRunningRate(SharedPreferences sharedPreferences, String key) {
+        /* get rate, convert to milliseconds, save it as update provider requires milliseconds */
+        String rate = sharedPreferences.getString(key, RUNNING_UPDATE_RATE_DEFAULT.toString());
 
+        Log.d(TAG, "updatePrefRunningRate rate: " + rate);
+        Float rateFloat = Float.valueOf(rate);
         /* convert to milliseconds and store as a long*/
-        rate = rate * 1000f;
-        activityRunningUpdateRate = rate.longValue();
-        Log.d(TAG, "updatePrefRunningRate activityRunningUpdateRate: " + activityRunningUpdateRate);
+        rateFloat = rateFloat * 1000F;
+        mActivityRunningUpdateRate = rateFloat.longValue();
         /* If activity is currently running then update location provider */
         if (isActivityRunning()) {
-            setLocationUpdateRate(activityRunningUpdateRate);
+            setLocationUpdateRate(mActivityRunningUpdateRate);
         }
     }
 
     /**
      * Updates rate at which location provider provides updates when the activity is not running
      * gets the new rate fom the share preferences
-     * checks valid format
-     * converts it to milliseconds and saves it
-     * getting the new rate fom the share preferences and
-     * then updating the rate variable
+     * converts it to milliseconds and saves it as a long
+     * in the rate variable
      *
      * @param sharedPreferences SharedPreference object where preferences are stored
      * @param key               preference key
      */
-    private void updatePrefNotRunningRate(SharedPreferences sharedPreferences, String key) {
-        /* get the rate and convert to milliseconds and save it, as update provider requires milliseconds */
-        String updateRate = sharedPreferences.getString(key, NotRunningUpdateRateDefault);
-        Float rate;
-        if (checkFloatFormat(updateRate)) {
-            rate = Float.valueOf(updateRate);
-        } else {
-            rate = Float.valueOf(NotRunningUpdateRateDefault);
-        }
+    private void getPrefNotRunningRate(SharedPreferences sharedPreferences, String key) {
+        /* get rate, convert to milliseconds, save it as update provider requires milliseconds */
+        String rate = sharedPreferences.getString(key, NOT_RUNNING_UPDATE_RATE_DEFAULT.toString());
+
         Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
-
+        Float rateFloat = Float.valueOf(rate);
         /* convert to milliseconds and store as a long as update provider requires milliseconds */
-        rate = rate * 1000f;
-        activityNotRunningUpdateRate = rate.longValue();
+        rateFloat = rateFloat * 1000F;
+        mActivityNotRunningUpdateRate = rateFloat.longValue();
 
-        Log.d(TAG, "updatePrefNotRunningRate activityNotRunningUpdateRate: " + activityNotRunningUpdateRate);
         /* If activity is currently not running then update location provider */
         if (!isActivityRunning()) {
-            setLocationUpdateRate(activityNotRunningUpdateRate);
+            setLocationUpdateRate(mActivityNotRunningUpdateRate);
         }
     }
 
+
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart");
+    }
+
+    /**
+     * Sets the location update intervals to the activity running values
+     * updates a boolean key in shared preferences to say the activity is running
+     */
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+        setLocationUpdateRate(mActivityRunningUpdateRate);
+        // Update shared preference to say activity is running
+        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
+        SharedPreferences.Editor ed = sp.edit();
+        ed.putBoolean(getString(R.string.pref_activity_state_key), true);
+        ed.apply();
+    }
+
+    /**
+     * Sets the location update intervals to the activity not running values
+     * updates a boolean key in shared preferences to say the activity is not running
+     */
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+        /* set the update rate in the location provider to the not running value*/
+        setLocationUpdateRate(mActivityNotRunningUpdateRate);
+        // Update shared preference to say activity is not running
+        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
+        SharedPreferences.Editor ed = sp.edit();
+        ed.putBoolean(getString(R.string.pref_activity_state_key), false);
+        ed.apply();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+
+        //unregister broadcast receiver
+        unregisterReceiver(mBroadcastReceiver);
+
+        //Stop background service
+        if (mIntentService != null) {
+            stopService(mIntentService);
+            mIntentService = null;
+        }
+    }
+
+    /**
+     * Checks state of activity ie is it running by accessing a shared preferences key
+     * which is set to true by onResume() and set to false by onPause()
+     *
+     * @return true if activity is running or false if not running
+     */
+    boolean isActivityRunning() {
+        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key),
+                MODE_PRIVATE);
+        return sp.getBoolean(getString(R.string.pref_activity_state_key), false);
+    }
+
+    /**
+     * Requests location updates from the fused location provider, which invokes LocationCallback
+     * <p>
+     * If fails exit application with a permission denied error message to the user
+     */
+    private void getLocation() {
+
+        /* start intent service for the background service */
+        mIntentService = new Intent(MainActivity.this, BackgroundGetLocation.class);
+        /* pass to the the rate for location updates */
+        mIntentService.putExtra(BackgroundGetLocation.EXTRA_KEY_RATE_VALUE,
+                mActivityRunningUpdateRate);
+        startService(mIntentService);
+
+/*        try {
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+        } catch (SecurityException securityException) {
+            Log.e(TAG, getString(R.string.permission_denied));
+            Toast.makeText(this, getResources().getString(R.string.error)
+                    + ": " + getResources().getString(R.string.permission_denied)
+                    + " " + getString(R.string.exiting), Toast.LENGTH_LONG).show();
+            finish(); // terminate the program
+        }*/
+    }
+
+    /**
+     * Checks if speed above previously stored maximum speed
+     * if so save the new maximum speed and display the maximum speed
+     *
+     * @param speed latest speed from the location provider
+     */
+    private void checkMaxSpeed(float speed) {
+        if (speed > mMaxSpeed) {
+            /* we have a new maximum speed */
+            mMaxSpeed = speed;
+            Log.d(TAG, "checkMaxSpeed mMaxSpeed: " + mMaxSpeed);
+            /* save maximum speed to shared preferences */
+            SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor mEditor = mSharedPref.edit();
+            mEditor.clear().putFloat(getString(R.string.pref_saved_max_speed_key),
+                    mMaxSpeed).apply();
+            /* display new maximum speed */
+            mMaxSpeedTextView.setText(String.format(Locale.UK, getResources()
+                    .getString(R.string.units_and_number_of_decimals), mMaxSpeed));
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 10:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    getLocation();
+        }
+    }
 
     /**
      * Check strings represents a valid floating point number
@@ -287,117 +349,72 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         return true;
     }
 
-    /**
-     * Updates the rate at which the location provider provides updates on location
-     * always sets the accuracy to high
-     *
-     * @param rate rate at which location provider provides updates
-     */
-    private void setLocationUpdateRate(long rate) {
-        Log.d(TAG, "setLocationUpdateRate: rate: " + rate);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(rate);
-        mLocationRequest.setFastestInterval(rate);
-    }
+    public class MyBroadcastReceiver extends BroadcastReceiver {
 
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart");
-    }
+        private final String TAG = MyBroadcastReceiver.class.getSimpleName();
 
-    /**
-     * Sets the location update intervals to the activity running values
-     * updates a boolean key in shared preferences to say the activity is running
-     */
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume");
-        setLocationUpdateRate(activityRunningUpdateRate);
-        // Update shared preference to say activity is running
-        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
-        SharedPreferences.Editor ed = sp.edit();
-        ed.putBoolean(getString(R.string.pref_activity_state_key), true);
-        ed.apply();
-    }
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Float speed = intent.getFloatExtra(BackgroundGetLocation.EXTRA_KEY_UPDATE_SPEED, 0.0F);
+            Log.d(TAG, "onReceive Speed: " + speed.toString());
 
-    /**
-     * Sets the location update intervals to the activity not running values
-     * updates a boolean key in shared preferences to say the activity is not running
-     */
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause");
-        /* set the update rate in the location provider to the not running value*/
-        setLocationUpdateRate(activityNotRunningUpdateRate);
-        // Update shared preference to say activity is not running
-        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
-        SharedPreferences.Editor ed = sp.edit();
-        ed.putBoolean(getString(R.string.pref_activity_state_key), false);
-        ed.apply();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    /**
-     * Checks state of activity ie is it running by accessing a shared preferences key
-     * which is set to true by onResume() and set to false by onPause()
-     *
-     * @return true if activity is running or false if not running
-     */
-    boolean isActivityRunning() {
-        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
-        return sp.getBoolean(getString(R.string.pref_activity_state_key), false);
-    }
-
-    /**
-     * Requests location updates from the fused location provider, which invokes LocationCallback
-     * <p>
-     * If fails exit application with a permission denied error message to the user
-     */
-    private void getLocation() {
-        try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-        } catch (SecurityException securityException) {
-            Log.e(TAG, getString(R.string.permission_denied));
-            Toast.makeText(this, getResources().getString(R.string.error)
-                    + ": " + getResources().getString(R.string.permission_denied)
-                    + " " + getString(R.string.exiting), Toast.LENGTH_LONG).show();
-            finish(); // terminate the program
+            /* display the speed */
+            mCurrentSpeedTextView.setText(String.format(Locale.UK,
+                    getString(R.string.units_and_number_of_decimals), speed));
+            checkMaxSpeed(speed);
         }
     }
 
+    //finish
+    private void setLocationUpdateRate(long rate) {
+
+    }
     /**
-     * Checks if speed above previously stored maximum speed
-     * if so save the new maximum speed and display the maximum speed
-     *
-     * @param speed latest speed from the location provider
-     */
-    private void checkMaxSpeed(float speed) {
-        if (speed > maxSpeed) {
-            /* we have a new maximum speed */
-            maxSpeed = speed;
-            Log.d(TAG, "checkMaxSpeed maxSpeed: " + maxSpeed);
-            /* save maximum speed to shared preferences */
+     * Methods for setting up the menu
+     **/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
+        MenuInflater inflater = getMenuInflater();
+        /* Use the inflater's inflate method to inflate our visualizer_menu layout to this menu */
+        inflater.inflate(R.menu.menu_main, menu);
+        /* Return true so that the visualizer_menu is displayed in the Toolbar */
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        /* check if request to reset maximum speed */
+        if (id == R.id.max_reset) {
+            /* save the new speed in shared preferences */
             SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
             SharedPreferences.Editor mEditor = mSharedPref.edit();
-            mEditor.clear().putFloat(getString(R.string.pref_saved_max_speed_key), maxSpeed).apply();
-            /* display new maximum speed */
-            tvMaxSpeed.setText(String.format(Locale.UK, getResources().getString(R.string.units_and_number_of_decimals), maxSpeed));
+            mEditor.clear();
+            mEditor.putFloat(getString(R.string.pref_saved_max_speed_key), 0f);
+            mEditor.apply();
+            /* display the zeroed speed */
+            mMaxSpeed = 0f;
+            mMaxSpeedTextView.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f));
+            return true;
         }
+        /* check if request to navigate to the settings screen */
+        if (id == R.id.action_settings) {
+            Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
+            startActivity(startSettingsActivity);
+            return true;
+        }
+        /* check if request to exit */
+        if (id == R.id.quit) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case 10:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    getLocation();
-        }
-    }
 }
 

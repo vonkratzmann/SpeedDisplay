@@ -21,8 +21,8 @@
     <!-- Shared Preferences -->
     <!-- Shared Preference keys  -->
     <string name="pref_saved_max_speed_key" translatable="false">savedMaxSpeed</string>
-    <string name="pref_running_update_rate_key" translatable="false">AppRunning</string>
-    <string name="pref_not_running_update_rate_key" translatable="false">AppNotRunning</string>
+    <string name="pref_running_update_rate_key" translatable="false">AppsRunning</string>
+    <string name="pref_not_running_update_rate_key" translatable="false">AppsNotRunning</string>
     <string name="pref_activity_state_key" translatable="false">ActivityState</string>
 
     <string name="pref_saved_max_speed_title">Maximum Speed</string>
