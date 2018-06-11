@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements
         mBroadcastReceiver = new MyBroadcastReceiver();
 
         //register broadcast receiver
-        IntentFilter intentFilter = new IntentFilter(BackgroundGetLocation
+        IntentFilter intentFilter = new IntentFilter(GetSpeedService
                 .ACTION_UpdateFromBackground);
         intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
         registerReceiver(mBroadcastReceiver, intentFilter);
@@ -280,9 +280,9 @@ public class MainActivity extends AppCompatActivity implements
     private void getLocation() {
 
         /* start intent service for the background service */
-        mIntentService = new Intent(MainActivity.this, BackgroundGetLocation.class);
+        mIntentService = new Intent(MainActivity.this, GetSpeedService.class);
         /* pass to the the rate for location updates */
-        mIntentService.putExtra(BackgroundGetLocation.EXTRA_KEY_RATE_VALUE,
+        mIntentService.putExtra(GetSpeedService.EXTRA_KEY_RATE_VALUE,
                 mActivityRunningUpdateRate);
         startService(mIntentService);
 
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Float speed = intent.getFloatExtra(BackgroundGetLocation.EXTRA_KEY_UPDATE_SPEED, 0.0F);
+            Float speed = intent.getFloatExtra(GetSpeedService.EXTRA_KEY_UPDATE_SPEED, 0.0F);
             Log.d(TAG, "onReceive Speed: " + speed.toString());
 
             /* display the speed */

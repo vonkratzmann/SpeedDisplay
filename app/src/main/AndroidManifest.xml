@@ -33,8 +33,8 @@
         </activity>
 
         <service
-            android:name=".BackgroundGetLocation"
-            android:label="BackgroundGetLocation">
+            android:name=".GetSpeedService"
+            android:label="GetSpeedService">
         </service>
 
     </application>

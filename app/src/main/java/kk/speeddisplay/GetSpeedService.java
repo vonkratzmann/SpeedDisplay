@@ -1,43 +1,43 @@
 package kk.speeddisplay;
 
-import android.app.IntentService;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.location.Location;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
-import android.widget.Toast;
+        import android.app.IntentService;
+        import android.app.Notification;
+        import android.app.NotificationManager;
+        import android.app.PendingIntent;
+        import android.content.Context;
+        import android.content.Intent;
+        import android.location.Location;
+        import android.support.v4.app.NotificationCompat;
+        import android.util.Log;
+        import android.widget.Toast;
 
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
+        import com.google.android.gms.location.LocationCallback;
+        import com.google.android.gms.location.LocationRequest;
+        import com.google.android.gms.location.LocationResult;
 
-import java.util.Locale;
+        import java.util.Locale;
 
-public class BackgroundGetLocation extends IntentService {
+public class GetSpeedService extends IntentService {
 
-    private static final String TAG = BackgroundGetLocation.class.getSimpleName();
+    private static final String TAG = GetSpeedService.class.getSimpleName();
 
-    //public static final String ACTION_IntentService = "com.example.android.backgroundgetlocation.RESPONSE";
-    public static final String ACTION_UpdateFromBackground = "com.example.android.backgroundgetlocation.UPDATE";
+    //public static final String ACTION_IntentService = "com.example.android.GetSpeedService.RESPONSE";
+    public static final String ACTION_UpdateFromBackground = "com.example.android.GetSpeedService.UPDATE";
 
     /* used to get the rate values from the activity intent
-    * these set the rate of location updates from the fused location provider */
+     * these set the rate of location updates from the fused location provider */
     public static final String EXTRA_KEY_RATE_VALUE = "EXTRA_RATE_VALUE";
 
-   // public static final String EXTRA_KEY_OUT = "EXTRA_OUT";
+    // public static final String EXTRA_KEY_OUT = "EXTRA_OUT";
     public static final String EXTRA_KEY_UPDATE_SPEED = "EXTRA_UPDATE_SPEED";
 
     private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
 
-    public BackgroundGetLocation() {
-        super("com.example.androidintentservice.BackgroundGetLocation");
-        Log.d(TAG, "BackgroundGetLocation");
+    public GetSpeedService() {
+        super("com.example.androidintentservice.GetSpeedService");
+        Log.d(TAG, "GetSpeedService");
     }
 
     @Override
@@ -78,7 +78,7 @@ public class BackgroundGetLocation extends IntentService {
          * when the activity state changes, or when it has been changed by the user */
 
         long rate = intent.getLongExtra(EXTRA_KEY_RATE_VALUE,
-                 MainActivity.RUNNING_UPDATE_RATE_DEFAULT);
+                MainActivity.RUNNING_UPDATE_RATE_DEFAULT);
         Log.d(TAG, "onHandleIntent" + " rate: " + rate);
         setLocationUpdateRate(rate);
 
