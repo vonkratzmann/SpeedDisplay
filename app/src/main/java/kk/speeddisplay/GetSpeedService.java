@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -40,6 +41,8 @@ public class GetSpeedService extends Service {
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
 
+    private final static int ONGOING_NOTIFICATION_ID = 1;
+
     private float mMaxSpeed;
 
     public GetSpeedService() {
@@ -60,6 +63,7 @@ public class GetSpeedService extends Service {
         /* tell user we have started checking speed */
         Toast.makeText(getApplicationContext(), "checking speed", Toast.LENGTH_SHORT).show();
 
+        /* set up the location callback for when the location has changed */
         mLocationCallback = new LocationCallback() {
             /* LocationResult a data class representing a geographic location result
              * from the fused location provider */
@@ -73,10 +77,24 @@ public class GetSpeedService extends Service {
                     float speed = location.getSpeed();
                     /* convert speed from metres/sec to km/hour */
                     speed = speed * 3600f / 1000f;
-                    /* check if maximum speed needs to be updated
-                     * if yes, save it in the preferences and send to main activity */
+                   
                     Log.d(TAG, "onLocationResult Speed: " + speed);
-                    /* send new speed to main activity */
+                    
+                    /* set up broadcast to pass the speed back to main activity for display */
+                    Intent updateSpeedIntent = new Intent();
+                    updateSpeedIntent.setAction("com.example.kk.speeddisplay.SPEED_NOTIFICATION");
+                    updateSpeedIntent.putExtra(getString(R.string.intent_speed), speed);
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(updateSpeedIntent);
+                    
+                     /* check if maximum speed needs to be updated
+                    /* if yes, save it in the preferences and send to main activity */
+                    checkMaxSpeed(speed);
+                    /* set up broadcast to pass the max speed back to main activity for display */
+                    Intent updateMaxSpeedIntent = new Intent();
+                    updateMaxSpeedIntent.setAction("com.example.kk.speeddisplay.MAX_NOTIFICATION");
+                    updateMaxSpeedIntent.putExtra(getString(R.string.intent_max_speed),
+                            speed);
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(updateMaxSpeedIntent);
                 }
             }
         };
@@ -84,17 +102,33 @@ public class GetSpeedService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        /* get location update rate from main activity intent */
+
         Log.d(TAG, "onStartCommand");
 
         /* check valid intent, service may have been stopped and restarted by android */
         if (intent != null) {
+            /* get location update rate from main activity intent */
             long rate = intent.getLongExtra(EXTRA_KEY_RATE_VALUE,
                     MainActivity.RUNNING_UPDATE_RATE_DEFAULT);
             Log.d(TAG, "onStartCommand" + " rate: " + rate);
             /* update LocationRequest object */
             setLocationUpdateRate(rate);
         }
+        /* send notification to the main activity and run as a foreground service */
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+        Notification notification = new NotificationCompat.Builder(this, "default")
+                .setContentTitle(getText(R.string.notification_title))
+                .setContentText(getText(R.string.notification_message))
+                .setSmallIcon(R.drawable.gps)
+                .setContentIntent(pendingIntent)
+                .setTicker(getText(R.string.notification_ticker_text))
+                .build();
+
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
 
         /* start the location provider */
         try {
@@ -139,7 +173,7 @@ public class GetSpeedService extends Service {
 
     /**
      * Checks if speed above previously stored maximum speed
-     * if so save the new maximum speed and display the maximum speed
+     * if so save the new maximum speed in the preferences
      *
      * @param speed latest speed from the location provider
      */
@@ -158,11 +192,4 @@ public class GetSpeedService extends Service {
 
 } //end of class
 
-/*
-        Intent intentResponse = new Intent();
-        intentResponse.setAction(ACTION_UpdateFromBackground);
-        intentResponse.addCategory(Intent.CATEGORY_DEFAULT);
-        intentResponse.putExtra(EXTRA_KEY_UPDATE_SPEED, 50f);
-        sendBroadcast(intentResponse);
-*/
 

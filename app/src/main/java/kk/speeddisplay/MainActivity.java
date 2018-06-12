@@ -1,6 +1,6 @@
 package kk.speeddisplay;
 /*
- * Speed Display v1.0
+ * Speed Display V1.0
  */
 
 import android.Manifest;
@@ -10,13 +10,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.LoaderManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -24,15 +23,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 
 import java.util.Locale;
-
-import static java.lang.String.valueOf;
 
 /**
  * MainActivity
@@ -43,6 +35,7 @@ public class MainActivity extends AppCompatActivity implements
 
     /* get a tag for output debugging */
     private final static String TAG = MainActivity.class.getSimpleName();
+
 
     /* displays current speed from the location provider */
     private TextView mCurrentSpeedTextView;
@@ -69,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements
     /* Default rate for location updates requested when the app not running in milliseconds */
     protected final static Long NOT_RUNNING_UPDATE_RATE_DEFAULT = 3500L;
 
-    private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
+    //private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,14 +75,6 @@ public class MainActivity extends AppCompatActivity implements
 
         mCurrentSpeedTextView = findViewById(R.id.tv_CurrentSpeed);
         mMaxSpeedTextView = findViewById(R.id.tv_MaxSpeed);
-
-        mBroadcastReceiver = new MyBroadcastReceiver();
-
-        //register broadcast receiver
-        IntentFilter intentFilter = new IntentFilter(GetSpeedService
-                .ACTION_UpdateFromBackground);
-        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
-        registerReceiver(mBroadcastReceiver, intentFilter);
 
         /* read settings form shared preferences and update location provider and screen */
         setupSharedPreferences();
@@ -226,6 +211,14 @@ public class MainActivity extends AppCompatActivity implements
         SharedPreferences.Editor ed = sp.edit();
         ed.putBoolean(getString(R.string.pref_activity_state_key), true);
         ed.apply();
+
+        //register broadcast receiver to receive speed updates
+        mBroadcastReceiver = new MyBroadcastReceiver();
+
+        IntentFilter intentFilter = new IntentFilter("com.example.kk.speeddisplay.SPEED_NOTIFICATION");
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mBroadcastReceiver, intentFilter);
+        this.registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
     /**
@@ -242,6 +235,9 @@ public class MainActivity extends AppCompatActivity implements
         SharedPreferences.Editor ed = sp.edit();
         ed.putBoolean(getString(R.string.pref_activity_state_key), false);
         ed.apply();
+
+        //unregister broadcast receiver for speed updates
+        this.unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
@@ -277,24 +273,16 @@ public class MainActivity extends AppCompatActivity implements
      * <p>
      * If fails exit application with a permission denied error message to the user
      */
+
     private void getLocation() {
 
-        /* start intent service for the background service */
+        /* start the foreground service */
         mIntentService = new Intent(MainActivity.this, GetSpeedService.class);
+
         /* pass to the the rate for location updates */
         mIntentService.putExtra(GetSpeedService.EXTRA_KEY_RATE_VALUE,
                 mActivityRunningUpdateRate);
         startService(mIntentService);
-
-/*        try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-        } catch (SecurityException securityException) {
-            Log.e(TAG, getString(R.string.permission_denied));
-            Toast.makeText(this, getResources().getString(R.string.error)
-                    + ": " + getResources().getString(R.string.permission_denied)
-                    + " " + getString(R.string.exiting), Toast.LENGTH_LONG).show();
-            finish(); // terminate the program
-        }*/
     }
 
 
@@ -334,13 +322,12 @@ public class MainActivity extends AppCompatActivity implements
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Float speed = intent.getFloatExtra(GetSpeedService.EXTRA_KEY_UPDATE_SPEED, 0.0F);
+            Float speed = intent.getFloatExtra(getString(R.string.intent_speed), 0.0F);
             Log.d(TAG, "onReceive Speed: " + speed.toString());
 
             /* display the speed */
             mCurrentSpeedTextView.setText(String.format(Locale.UK,
                     getString(R.string.units_and_number_of_decimals), speed));
-           // checkMaxSpeed(speed); //kk moved to service
         }
     }
 
@@ -348,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements
     private void setLocationUpdateRate(long rate) {
 
     }
+
     /**
      * Methods for setting up the menu
      **/
@@ -394,6 +382,4 @@ public class MainActivity extends AppCompatActivity implements
         }
         return super.onOptionsItemSelected(item);
     }
-
 }
-

@@ -40,14 +40,22 @@
 
     <string name="pref_activity_update_rate_dialog">Enter the time in seconds"</string>
 
-
-    <!--display formatting -->
+    <!-- display formatting -->
     <string name="units_and_number_of_decimals">%1$.1f km/hr</string>
+
+    <!-- notification messages -->
+    <string name="notification_title">Speed Display"</string>
+    <string name="notification_message">Started"</string>
+    <string name="notification_ticker_text">Ticker text"</string>
 
     <!-- Color options -->
     <string name="pref_color_red_value" translatable="false">red</string>
     <string name="pref_color_blue_value" translatable="false">blue</string>
     <string name="pref_color_green_value" translatable="false">green</string>
+
+    <!-- Intent strings -->
+    <string name="intent_speed" translatable="false">"speed"</string>
+    <string name="intent_max_speed" translatable="false">"max"</string>
 
     <!-- error strings -->
     <string name="error">Error</string>
