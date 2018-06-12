@@ -34,17 +34,20 @@ public class MainActivity extends AppCompatActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     /* get a tag for output debugging */
-    private final static String TAG = MainActivity.class.getSimpleName();
+    private final static String TAG = "SpeedDisplay " + MainActivity.class.getSimpleName();
 
-
-    /* displays current speed from the location provider */
+    /* displays current speed from the location provider in the foreground service */
     private TextView mCurrentSpeedTextView;
 
-    /* displays maximum speed recorded to date, max speed is saved in the shared preferences */
+    /* displays maximum speed recorded to date,
+     * max speed is saved in the shared preferences
+      * max speed speed is calculated in the foreground service */
     private TextView mMaxSpeedTextView;
 
-    /* get updates from background task checking for location updates */
-    private MyBroadcastReceiver mBroadcastReceiver;
+    /* gets speed updates from foreground service checking for location updates */
+    private MySpeedBroadcastReceiver mSpeedBroadcastReceiver;
+    /* gets maximum speed updates from foreground service */
+    private MySpeedBroadcastReceiver mMaxSpeedBroadcastReceiver;
 
     Intent mIntentService;
 
@@ -53,16 +56,13 @@ public class MainActivity extends AppCompatActivity implements
     /* update intervals at which the activity will receive location updates,
      * separate update intervals for when the activity is running and not running
      * these are saved in the shared preferences
+     * and can be changed by the user in settings
+     * if changed passed to the service or
+     * if activity state changes, the appropriate rate sent to the service
      */
     private long mActivityRunningUpdateRate;
-    /* Default rate for location updates when the app running in milliseconds */
-    protected final static Long RUNNING_UPDATE_RATE_DEFAULT = 2000L;
-
     private long mActivityNotRunningUpdateRate;
-    /* Default rate for location updates requested when the app not running in milliseconds */
-    protected final static Long NOT_RUNNING_UPDATE_RATE_DEFAULT = 3500L;
 
-    //private com.google.android.gms.location.FusedLocationProviderClient mFusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,8 +84,8 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Checks have permission to access location resources.
      * <p>
-     * If permission granted, calls the method {@link #getLocation}. which requests
-     * updates updates from the fused location provider.
+     * If permission granted, calls the method {@link #getLocation}. which starts
+     * the foreground service which provides updates from the fused location provider.
      * If permission denied puts out a message and then exits.
      */
 
@@ -154,7 +154,8 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void getPrefRunningRate(SharedPreferences sharedPreferences, String key) {
         /* get rate, convert to milliseconds, save it as update provider requires milliseconds */
-        String rate = sharedPreferences.getString(key, RUNNING_UPDATE_RATE_DEFAULT.toString());
+        String rate = sharedPreferences.getString(key,
+                Constant.RUNNING_UPDATE_RATE_DEFAULT.toString());
 
         Log.d(TAG, "updatePrefRunningRate rate: " + rate);
         Float rateFloat = Float.valueOf(rate);
@@ -163,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements
         mActivityRunningUpdateRate = rateFloat.longValue();
         /* If activity is currently running then update location provider */
         if (isActivityRunning()) {
-            setLocationUpdateRate(mActivityRunningUpdateRate);
+            sendRateToService(mActivityRunningUpdateRate);
         }
     }
 
@@ -178,7 +179,8 @@ public class MainActivity extends AppCompatActivity implements
      */
     private void getPrefNotRunningRate(SharedPreferences sharedPreferences, String key) {
         /* get rate, convert to milliseconds, save it as update provider requires milliseconds */
-        String rate = sharedPreferences.getString(key, NOT_RUNNING_UPDATE_RATE_DEFAULT.toString());
+        String rate = sharedPreferences.getString(key,
+                Constant.NOT_RUNNING_UPDATE_RATE_DEFAULT.toString());
 
         Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
         Float rateFloat = Float.valueOf(rate);
@@ -188,10 +190,9 @@ public class MainActivity extends AppCompatActivity implements
 
         /* If activity is currently not running then update location provider */
         if (!isActivityRunning()) {
-            setLocationUpdateRate(mActivityNotRunningUpdateRate);
+            sendRateToService(mActivityNotRunningUpdateRate);
         }
     }
-
 
     protected void onStart() {
         super.onStart();
@@ -201,43 +202,52 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Sets the location update intervals to the activity running values
      * updates a boolean key in shared preferences to say the activity is running
+     * register broadcast receiver to receive speed updates from service
      */
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume");
-        setLocationUpdateRate(mActivityRunningUpdateRate);
+        
         // Update shared preference to say activity is running
         SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
         SharedPreferences.Editor ed = sp.edit();
         ed.putBoolean(getString(R.string.pref_activity_state_key), true);
         ed.apply();
 
-        //register broadcast receiver to receive speed updates
-        mBroadcastReceiver = new MyBroadcastReceiver();
+        //register broadcast receiver to receive speed updates from service
+        mSpeedBroadcastReceiver = new MySpeedBroadcastReceiver();
 
-        IntentFilter intentFilter = new IntentFilter("com.example.kk.speeddisplay.SPEED_NOTIFICATION");
+        IntentFilter intentFilter = new IntentFilter(getString(R.string.ACTION_SendSpeedToMain));
         intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(mBroadcastReceiver, intentFilter);
-        this.registerReceiver(mBroadcastReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(mSpeedBroadcastReceiver, intentFilter);
+        
+        /* screen now visible and activity running, send new update rate to location provider */
+        sendRateToService(mActivityRunningUpdateRate);
     }
+
 
     /**
      * Sets the location update intervals to the activity not running values
      * updates a boolean key in shared preferences to say the activity is not running
+     * unregister broadcast receiver so do not receive speed updates from service
      */
     protected void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        /* set the update rate in the location provider to the not running value*/
-        setLocationUpdateRate(mActivityNotRunningUpdateRate);
+       
         // Update shared preference to say activity is not running
         SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key), MODE_PRIVATE);
         SharedPreferences.Editor ed = sp.edit();
         ed.putBoolean(getString(R.string.pref_activity_state_key), false);
         ed.apply();
 
-        //unregister broadcast receiver for speed updates
-        this.unregisterReceiver(mBroadcastReceiver);
+        //unregister broadcast receiver for speed updates as no longer in focus
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .unregisterReceiver(mSpeedBroadcastReceiver);
+
+        /* screen not visible and activity not running, send new update rate to location provider */
+        sendRateToService(mActivityNotRunningUpdateRate);
     }
 
     @Override
@@ -246,14 +256,26 @@ public class MainActivity extends AppCompatActivity implements
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
 
-        //unregister broadcast receiver
-        unregisterReceiver(mBroadcastReceiver);
-
         //Stop background service
         if (mIntentService != null) {
             stopService(mIntentService);
             mIntentService = null;
         }
+    }
+
+    /**
+     * sends via broadcast location provider update rate to the service
+     *
+     * @param rate  update rate to be sent to the location provider
+     */
+    private void sendRateToService(long rate) {
+        Log.d(TAG, "sendRateToService rate: " + rate);
+        /* set up broadcast to pass the running update rate to the service*/
+        Intent updateRate = new Intent();
+        updateRate.setAction(getString(R.string.ACTION_SendRateToService));
+        updateRate.putExtra(getString(R.string.extra_key_rate_value), rate);
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .sendBroadcast(updateRate);
     }
 
     /**
@@ -269,6 +291,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * Starts foreground service
      * Requests location updates from the fused location provider, which invokes LocationCallback
      * <p>
      * If fails exit application with a permission denied error message to the user
@@ -278,13 +301,8 @@ public class MainActivity extends AppCompatActivity implements
 
         /* start the foreground service */
         mIntentService = new Intent(MainActivity.this, GetSpeedService.class);
-
-        /* pass to the the rate for location updates */
-        mIntentService.putExtra(GetSpeedService.EXTRA_KEY_RATE_VALUE,
-                mActivityRunningUpdateRate);
         startService(mIntentService);
     }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -316,14 +334,13 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
-    public class MyBroadcastReceiver extends BroadcastReceiver {
-
-        private final String TAG = MyBroadcastReceiver.class.getSimpleName();
+    public class MySpeedBroadcastReceiver extends BroadcastReceiver {
+        private final String TAG = "SpeedDisplay " + MySpeedBroadcastReceiver.class.getSimpleName();
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Float speed = intent.getFloatExtra(getString(R.string.intent_speed), 0.0F);
-            Log.d(TAG, "onReceive Speed: " + speed.toString());
+            Float speed = intent.getFloatExtra(getString(R.string.extra_key_intent_speed), 0.0F);
+            Log.d(TAG, "onReceive Speed: " + speed);
 
             /* display the speed */
             mCurrentSpeedTextView.setText(String.format(Locale.UK,
@@ -331,11 +348,20 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    //finish
-    private void setLocationUpdateRate(long rate) {
 
+    public class MyMaxBroadcastReceiver extends BroadcastReceiver {
+        private final String TAG = "SpeedDisplay " + MyMaxBroadcastReceiver.class.getSimpleName();
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Float max = intent.getFloatExtra(getString(R.string.extra_key_intent_max_speed), 0.0F);
+            Log.d(TAG, "onReceive max: " + max);
+
+            /* display the speed */
+            mMaxSpeedTextView.setText(String.format(Locale.UK,
+                    getString(R.string.units_and_number_of_decimals), max));
+        }
     }
-
     /**
      * Methods for setting up the menu
      **/
