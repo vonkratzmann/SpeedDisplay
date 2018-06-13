@@ -40,18 +40,17 @@ public class MainActivity extends AppCompatActivity implements
     private TextView mCurrentSpeedTextView;
 
     /* displays maximum speed recorded to date,
-     * max speed is saved in the shared preferences
-      * max speed speed is calculated in the foreground service */
+     * max speed speed is calculated in the foreground service
+     * max speed is saved in the shared preferences by the foreground service
+     */
     private TextView mMaxSpeedTextView;
 
-    /* gets speed updates from foreground service checking for location updates */
+    /* gets speed updates from foreground service */
     private MySpeedBroadcastReceiver mSpeedBroadcastReceiver;
     /* gets maximum speed updates from foreground service */
     private MySpeedBroadcastReceiver mMaxSpeedBroadcastReceiver;
 
     Intent mIntentService;
-
-    private float mMaxSpeed;
 
     /* update intervals at which the activity will receive location updates,
      * separate update intervals for when the activity is running and not running
@@ -77,14 +76,15 @@ public class MainActivity extends AppCompatActivity implements
         mMaxSpeedTextView = findViewById(R.id.tv_MaxSpeed);
 
         /* read settings form shared preferences and update location provider and screen */
-        setupSharedPreferences();
         checkPermissions();
+        setupSharedPreferences();
+
     }
 
     /**
      * Checks have permission to access location resources.
      * <p>
-     * If permission granted, calls the method {@link #getLocation}. which starts
+     * If permission granted, calls the method {@link #getMyLocation}. which starts
      * the foreground service which provides updates from the fused location provider.
      * If permission denied puts out a message and then exits.
      */
@@ -102,22 +102,21 @@ public class MainActivity extends AppCompatActivity implements
                         Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.INTERNET
                 }, 10);
             }
-            getLocation();
+            getMyLocation();
         } else {
-            getLocation();
+            getMyLocation();
         }
     }
 
     /**
-     * Retrieves shared preferences for maximum speed & location provider update rate
+     * Retrieves shared preferences update rates and pass to location provider in service
      */
     private void setupSharedPreferences() {
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         /* Get the values from shared preferences and store in appropriate variables */
-        getPrefMaxSpeed();
         getPrefRunningRate(mSharedPref, getString(R.string.pref_running_update_rate_key));
         getPrefNotRunningRate(mSharedPref, getString(R.string.pref_not_running_update_rate_key));
-        /* register listener here for any changes and unregister in onDestroy */
+        /* register listener for any changes to shared preferences and unregister in onDestroy */
         mSharedPref.registerOnSharedPreferenceChangeListener(this);
     }
 
@@ -131,23 +130,10 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * Retrieves saved maximum speed from Shared preferences
-     * and then displays this speed
-     */
-    private void getPrefMaxSpeed() {
-        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        mMaxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
-        Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(mMaxSpeed));
-        /* display max speed */
-        mMaxSpeedTextView.setText(String.format(Locale.UK,
-                getString(R.string.units_and_number_of_decimals), mMaxSpeed));
-    }
-
-    /**
      * Updates rate at which location provider provides updates when the activity is running
      * gets the new rate fom the share preferences
-     * converts it to milliseconds and saves it as a long
-     * in the rate variable
+     * converts it to milliseconds and saves it as a long in the rate variable
+     * then sends it to the service if the activity is running
      *
      * @param sharedPreferences SharedPreference object where preferences are stored
      * @param key               preference key
@@ -171,8 +157,8 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Updates rate at which location provider provides updates when the activity is not running
      * gets the new rate fom the share preferences
-     * converts it to milliseconds and saves it as a long
-     * in the rate variable
+     * converts it to milliseconds and saves it as a long in the rate variable
+     * then sends it to the service if the activity is not running
      *
      * @param sharedPreferences SharedPreference object where preferences are stored
      * @param key               preference key
@@ -216,10 +202,9 @@ public class MainActivity extends AppCompatActivity implements
 
         //register broadcast receiver to receive speed updates from service
         mSpeedBroadcastReceiver = new MySpeedBroadcastReceiver();
-
-        IntentFilter intentFilter = new IntentFilter(getString(R.string.ACTION_SendSpeedToMain));
-        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
-        LocalBroadcastManager.getInstance(getApplicationContext())
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getString(R.string.ACTION_SendSpeedToMain));
+        LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mSpeedBroadcastReceiver, intentFilter);
         
         /* screen now visible and activity running, send new update rate to location provider */
@@ -243,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements
         ed.apply();
 
         //unregister broadcast receiver for speed updates as no longer in focus
-        LocalBroadcastManager.getInstance(getApplicationContext())
+        LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mSpeedBroadcastReceiver);
 
         /* screen not visible and activity not running, send new update rate to location provider */
@@ -291,13 +276,13 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * Starts foreground service
-     * Requests location updates from the fused location provider, which invokes LocationCallback
+     * Starts foreground service which
+     * requests location updates from the fused location provider, which invokes LocationCallback
      * <p>
      * If fails exit application with a permission denied error message to the user
      */
 
-    private void getLocation() {
+    private void getMyLocation() {
 
         /* start the foreground service */
         mIntentService = new Intent(MainActivity.this, GetSpeedService.class);
@@ -310,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements
         switch (requestCode) {
             case 10:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    getLocation();
+                    getMyLocation();
         }
     }
 
@@ -339,30 +324,28 @@ public class MainActivity extends AppCompatActivity implements
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            /* get the latest speed */
             Float speed = intent.getFloatExtra(getString(R.string.extra_key_intent_speed), 0.0F);
             Log.d(TAG, "onReceive Speed: " + speed);
 
             /* display the speed */
             mCurrentSpeedTextView.setText(String.format(Locale.UK,
                     getString(R.string.units_and_number_of_decimals), speed));
+
+            /* check if max speed changed */
+            boolean maxSpeedChanged = intent.
+                    getBooleanExtra(getString(R.string.extra_key_intent_max_speed_changed), false);
+            Log.d(TAG, "onReceive speedChanged: " + maxSpeedChanged);
+            /* get the new max speed and display it */
+            if (maxSpeedChanged) {
+                Float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_intent_max_speed), 0.0F);
+                mMaxSpeedTextView.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
+                Log.d(TAG, "onReceive maxSpeed: " + maxSpeed);
+            }
         }
     }
 
-
-    public class MyMaxBroadcastReceiver extends BroadcastReceiver {
-        private final String TAG = "SpeedDisplay " + MyMaxBroadcastReceiver.class.getSimpleName();
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Float max = intent.getFloatExtra(getString(R.string.extra_key_intent_max_speed), 0.0F);
-            Log.d(TAG, "onReceive max: " + max);
-
-            /* display the speed */
-            mMaxSpeedTextView.setText(String.format(Locale.UK,
-                    getString(R.string.units_and_number_of_decimals), max));
-        }
-    }
-    /**
+   /**
      * Methods for setting up the menu
      **/
     @Override
@@ -384,15 +367,8 @@ public class MainActivity extends AppCompatActivity implements
 
         /* check if request to reset maximum speed */
         if (id == R.id.max_reset) {
-            /* save the new speed in shared preferences */
-            SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor mEditor = mSharedPref.edit();
-            mEditor.clear();
-            mEditor.putFloat(getString(R.string.pref_saved_max_speed_key), 0f);
-            mEditor.apply();
-            /* display the zeroed speed */
-            mMaxSpeed = 0f;
-            mMaxSpeedTextView.setText(String.format(Locale.UK, "%1$.1f km/hr", 0f));
+            /* sends message to service to clear max speed */
+            //kk send message to service to clear max speed
             return true;
         }
         /* check if request to navigate to the settings screen */

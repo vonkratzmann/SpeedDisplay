@@ -45,7 +45,7 @@
 
     <!-- notification messages -->
     <string name="notification_title">Speed Display"</string>
-    <string name="notification_message">Started"</string>
+    <string name="notification_message">Running"</string>
     <string name="notification_ticker_text">Ticker text"</string>
 
     <!-- Color options -->
@@ -67,6 +67,7 @@
     <string name="extra_key_rate_value" translatable="false">"rate_value"</string>
     <string name="extra_key_intent_speed" translatable="false">"current_speed"</string>
     <string name="extra_key_intent_max_speed" translatable="false">"max_speed"</string>
+    <string name="extra_key_intent_max_speed_changed" translatable="false">"max_speed_changed"</string>
 
     <!-- error strings -->
     <string name="error">Error</string>
