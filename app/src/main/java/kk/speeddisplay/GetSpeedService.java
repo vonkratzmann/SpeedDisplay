@@ -22,9 +22,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.Task;
 
 public class GetSpeedService extends Service {
 
@@ -35,6 +32,7 @@ public class GetSpeedService extends Service {
     private LocationCallback mLocationCallback;
 
     private float mMaxSpeed;
+    private float savedSpeed;
 
     /* gets update rate for the location provider from the main activity */
     BroadcastReceiver mRateBroadcastReceiver;
@@ -69,12 +67,14 @@ public class GetSpeedService extends Service {
                     float speed = location.getSpeed();
                     /* convert speed from metres/sec to km/hour */
                     speed = speed * 3600F / 1000F;
+                    /* save speed for possible broadcasts back to main */
+                    savedSpeed = speed;
 
                     Log.d(TAG, "onLocationResult Speed: " + speed);
 
-                    /* send to main activity,
-                     * let sendSpeed() determine if maxSpeed needs updating in main activity */
-                    sendSpeed(speed, false);
+                    /* send to main activity */
+                    mMaxSpeed = checkMaxSpeed(speed, mMaxSpeed);
+                    sendToMain(speed, mMaxSpeed);
                 }
             }
         };
@@ -121,13 +121,12 @@ public class GetSpeedService extends Service {
                 .registerReceiver(mRateBroadcastReceiver, intentFilter);
 
         /* get max speed from preferences and send it to main activity for display */
-        getPrefMaxSpeed();
+        mMaxSpeed = getPrefMaxSpeed();
 
         /* send to main activity, speed is zero initially,
          * but will be updated when location provider provides updates
-         * sendSpeed() will tell main activity to update maxSpeed
          */
-        sendSpeed(0.0F, true);
+        sendToMain(0.0F, mMaxSpeed);
 
         /* If the system kills the service after onStartCommand() returns,
          * recreate the service and call onStartCommand()
@@ -159,26 +158,16 @@ public class GetSpeedService extends Service {
      * set up broadcast to pass the speed, maxSpeed, and flag to say if main activity should
      * process or ignore maxSpeed
      *
-     * @param speed
-     * @param processMaxSpeed if true Main activity to process maxSpeed, used at startup of service
+     * @param speed     latest speed
+     * @param maxSpeed  current maximum speed
      */
 
-    private void sendSpeed(float speed, boolean processMaxSpeed) {
+    private void sendToMain(float speed, float maxSpeed) {
         Intent updateSpeedIntent = new Intent();
         updateSpeedIntent.setAction(getString(R.string.ACTION_SendSpeedToMain));
-        updateSpeedIntent.putExtra(getString(R.string.extra_key_intent_speed), speed);
-        updateSpeedIntent.putExtra(getString(R.string.extra_key_intent_max_speed), mMaxSpeed);
+        updateSpeedIntent.putExtra(getString(R.string.extra_key_speed), speed);
+        updateSpeedIntent.putExtra(getString(R.string.extra_key_max_speed), maxSpeed);
 
-        if (processMaxSpeed) {
-            /* tell main activity to process maxSpeed */
-            updateSpeedIntent.putExtra(getString(R.string.extra_key_intent_max_speed_changed), true);
-        } else if (checkMaxSpeed(speed)) {
-            /* maxSpeed has changed, tell main activity to process it */
-            updateSpeedIntent.putExtra(getString(R.string.extra_key_intent_max_speed_changed), true);
-        } else {
-            /* max speed not changed so pass flag saying ignore maxSpeed to main activity */
-            updateSpeedIntent.putExtra(getString(R.string.extra_key_intent_max_speed_changed), false);
-        }
         /* send the message to main activity */
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .sendBroadcast(updateSpeedIntent);
@@ -186,11 +175,14 @@ public class GetSpeedService extends Service {
 
     /**
      * Retrieves saved maximum speed from Shared preferences
+     *
+     * @return maximum speed
      */
-    private void getPrefMaxSpeed() {
+    private float getPrefMaxSpeed() {
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        mMaxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
-        Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(mMaxSpeed));
+        float maxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
+        Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(maxSpeed));
+        return maxSpeed;
     }
 
     /**
@@ -212,25 +204,36 @@ public class GetSpeedService extends Service {
     }
 
     /**
-     * Checks if speed above previously stored maximum speed
+     * Checks if speed above previously maximum speed
      * if so save the new maximum speed in the preferences
+     * always return the maximum speed, either the old maximum or the new maximum
      *
-     * @param speed latest speed from the location provider
-     * @return boolean return true if we have new maximum speed
+     * @param speed     latest speed from the location provider
+     * @param maxSpeed  current maximum speed
+     * @return float    always return the maximum speed
      */
-    private boolean checkMaxSpeed(float speed) {
-        boolean newMaxSpeed = false;
-        if (speed > mMaxSpeed) {
+    private float checkMaxSpeed(float speed, float maxSpeed) {
+        if (speed > maxSpeed) {
             /* we have a new maximum speed */
-            mMaxSpeed = speed;
-            Log.d(TAG, "checkMaxSpeed mMaxSpeed: " + mMaxSpeed);
-            /* save maximum speed to shared preferences */
-            SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor mEditor = mSharedPref.edit();
-            mEditor.clear().putFloat(getString(R.string.pref_saved_max_speed_key), mMaxSpeed).apply();
-            newMaxSpeed = true;
+            Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
+            /* save new maximum speed to shared preferences */
+            saveMaxSpeed(speed);
+            return speed;
         }
-        return newMaxSpeed;
+        return maxSpeed;
+    }
+
+    /**
+     * save maximum speed to shared preferences
+     *
+     * @param maxSpeed maximum speed to be saved
+     */
+    private void saveMaxSpeed(float maxSpeed) {
+        Log.d(TAG, "saveMaxSpeed maxSpeed: " + maxSpeed);
+        /* save maximum speed to shared preferences */
+        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor mEditor = mSharedPref.edit();
+        mEditor.clear().putFloat(getString(R.string.pref_saved_max_speed_key), maxSpeed).apply();
     }
 
     public class MyRateBroadcastReceiver extends BroadcastReceiver {
@@ -238,6 +241,8 @@ public class GetSpeedService extends Service {
 
         /**
          * gets the update rate from the intent and updates the location provider
+         * checks if we need to reset maximum speed, if yes, zero maximum speed,
+         * save it and send new maximum speed back to main for display
          *
          * @param context context
          * @param intent  broadcast intent
@@ -245,8 +250,16 @@ public class GetSpeedService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             long rate = intent.getLongExtra(getString(R.string.extra_key_rate_value), Constant.RUNNING_UPDATE_RATE_DEFAULT);
+            /* update the location provider */
             setLocationUpdateRate(rate);
-            Log.d(TAG, "onReceive rate: " + rate);
+
+            boolean resetMaxSpeed = intent. getBooleanExtra(getString(R.string.extra_key_reset_max_speed), false);
+            if (resetMaxSpeed) {
+                mMaxSpeed = 0.0F;
+                saveMaxSpeed(mMaxSpeed);
+                sendToMain(savedSpeed, mMaxSpeed);
+            }
+            Log.d(TAG, "onReceive rate: " + rate + " resetMaxSpeed; " + resetMaxSpeed);
         }
     }
 } //end of class GetSpeedService

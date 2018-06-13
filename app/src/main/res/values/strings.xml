@@ -65,9 +65,9 @@
     <!-- Extra key for intents -->
     <!--used to get the rate values from the intent -->
     <string name="extra_key_rate_value" translatable="false">"rate_value"</string>
-    <string name="extra_key_intent_speed" translatable="false">"current_speed"</string>
-    <string name="extra_key_intent_max_speed" translatable="false">"max_speed"</string>
-    <string name="extra_key_intent_max_speed_changed" translatable="false">"max_speed_changed"</string>
+    <string name="extra_key_speed" translatable="false">"current_speed"</string>
+    <string name="extra_key_max_speed" translatable="false">"max_speed"</string>
+    <string name="extra_key_reset_max_speed" translatable="false">"reset_max_speed"</string>
 
     <!-- error strings -->
     <string name="error">Error</string>
