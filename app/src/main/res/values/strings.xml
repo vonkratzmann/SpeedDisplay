@@ -68,6 +68,7 @@
     <string name="extra_key_speed" translatable="false">"current_speed"</string>
     <string name="extra_key_max_speed" translatable="false">"max_speed"</string>
     <string name="extra_key_reset_max_speed" translatable="false">"reset_max_speed"</string>
+    <string name="extra_key_main_running" translatable="false">"main_running"</string>
 
     <!-- error strings -->
     <string name="error">Error</string>

@@ -15,7 +15,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -34,18 +33,20 @@ public class GetSpeedService extends Service {
     private float mMaxSpeed;
     private float savedSpeed;
 
+    private boolean mMainActivityRunning;
+
     /* gets update rate for the location provider from the main activity */
     BroadcastReceiver mRateBroadcastReceiver;
 
     public GetSpeedService() {
         super();
-        Log.d(TAG, "GetSpeedService");
+        //Log.d(TAG, "GetSpeedService");
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "onCreate");
+        //Log.d(TAG, "onCreate");
 
         /* set up fused location client, which is API from Google Play Services  */
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -59,7 +60,7 @@ public class GetSpeedService extends Service {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if (locationResult == null) {
-                    Log.d(TAG, "onLocationResult locationResult=null");
+                    //Log.d(TAG, "onLocationResult locationResult=null");
                     return;
                 }
                 /* process all locations provided */
@@ -70,11 +71,16 @@ public class GetSpeedService extends Service {
                     /* save speed for possible broadcasts back to main */
                     savedSpeed = speed;
 
-                    Log.d(TAG, "onLocationResult Speed: " + speed);
+                    //Log.d(TAG, "onLocationResult Speed: " + speed);
 
-                    /* send to main activity */
                     mMaxSpeed = checkMaxSpeed(speed, mMaxSpeed);
-                    sendToMain(speed, mMaxSpeed);
+                    /* sends speed and max speed to main activity each time,
+                     * rather than sending flags which say maxSpeed has changed and
+                     * then having code to check the flags and update the maxSpeed.
+                     * Only send to main activity via broadcast if main activity is running */
+                    if (mMainActivityRunning) {
+                        sendToMain(speed, mMaxSpeed);
+                    }
                 }
             }
         };
@@ -86,7 +92,7 @@ public class GetSpeedService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.d(TAG, "onStartCommand");
+        //Log.d(TAG, "onStartCommand");
 
         /* send notification to the main activity and run as a foreground service */
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -109,7 +115,7 @@ public class GetSpeedService extends Service {
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
         } catch (
                 SecurityException securityException) {
-            Log.d(TAG, "onStartCommand permission denied");
+            //Log.d(TAG, "onStartCommand permission denied");
             Log.e(TAG, getString(R.string.permission_denied));
         }
 
@@ -143,7 +149,7 @@ public class GetSpeedService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy");
+        //Log.d(TAG, "onDestroy");
         super.onDestroy();
 
         /* stop location updates */
@@ -158,8 +164,8 @@ public class GetSpeedService extends Service {
      * set up broadcast to pass the speed, maxSpeed, and flag to say if main activity should
      * process or ignore maxSpeed
      *
-     * @param speed     latest speed
-     * @param maxSpeed  current maximum speed
+     * @param speed    latest speed
+     * @param maxSpeed current maximum speed
      */
 
     private void sendToMain(float speed, float maxSpeed) {
@@ -181,7 +187,7 @@ public class GetSpeedService extends Service {
     private float getPrefMaxSpeed() {
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         float maxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
-        Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(maxSpeed));
+        //Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(maxSpeed));
         return maxSpeed;
     }
 
@@ -194,7 +200,7 @@ public class GetSpeedService extends Service {
      * @param rate rate at which location provider provides updates
      */
     private void setLocationUpdateRate(long rate) {
-        Log.d(TAG, "setLocationUpdateRate: rate: " + rate);
+        //Log.d(TAG, "setLocationUpdateRate: rate: " + rate);
         mLocationRequest.setInterval(rate);
         mLocationRequest.setFastestInterval(rate);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -208,14 +214,14 @@ public class GetSpeedService extends Service {
      * if so save the new maximum speed in the preferences
      * always return the maximum speed, either the old maximum or the new maximum
      *
-     * @param speed     latest speed from the location provider
-     * @param maxSpeed  current maximum speed
+     * @param speed    latest speed from the location provider
+     * @param maxSpeed current maximum speed
      * @return float    always return the maximum speed
      */
     private float checkMaxSpeed(float speed, float maxSpeed) {
         if (speed > maxSpeed) {
             /* we have a new maximum speed */
-            Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
+            //Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
             /* save new maximum speed to shared preferences */
             saveMaxSpeed(speed);
             return speed;
@@ -229,7 +235,7 @@ public class GetSpeedService extends Service {
      * @param maxSpeed maximum speed to be saved
      */
     private void saveMaxSpeed(float maxSpeed) {
-        Log.d(TAG, "saveMaxSpeed maxSpeed: " + maxSpeed);
+        //Log.d(TAG, "saveMaxSpeed maxSpeed: " + maxSpeed);
         /* save maximum speed to shared preferences */
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor mEditor = mSharedPref.edit();
@@ -241,8 +247,8 @@ public class GetSpeedService extends Service {
 
         /**
          * gets the update rate from the intent and updates the location provider
-         * checks if we need to reset maximum speed, if yes, zero maximum speed,
-         * save it and send new maximum speed back to main for display
+         * checks if we need to reset the maximum speed, if yes, zero maximum speed,
+         * save it in the preferences and send new maximum speed back to main for display
          *
          * @param context context
          * @param intent  broadcast intent
@@ -253,13 +259,18 @@ public class GetSpeedService extends Service {
             /* update the location provider */
             setLocationUpdateRate(rate);
 
-            boolean resetMaxSpeed = intent. getBooleanExtra(getString(R.string.extra_key_reset_max_speed), false);
+            /* check if we need to reset the maximum speed */
+            boolean resetMaxSpeed = intent.getBooleanExtra(getString(R.string.extra_key_reset_max_speed), false);
             if (resetMaxSpeed) {
                 mMaxSpeed = 0.0F;
                 saveMaxSpeed(mMaxSpeed);
                 sendToMain(savedSpeed, mMaxSpeed);
             }
-            Log.d(TAG, "onReceive rate: " + rate + " resetMaxSpeed; " + resetMaxSpeed);
+
+            /* update status of mMainActivityRunning */
+            mMainActivityRunning = intent.getBooleanExtra(getString(R.string.extra_key_main_running), false);
+            //Log.d(TAG, "onReceive rate: " + rate + " resetMaxSpeed; " + resetMaxSpeed +
+            //        " mMainActivityRunning: " + mMainActivityRunning);
         }
     }
 } //end of class GetSpeedService

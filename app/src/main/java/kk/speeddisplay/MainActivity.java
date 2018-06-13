@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d(TAG, "onCreate");
+        //Log.d(TAG, "onCreate");
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -77,7 +77,13 @@ public class MainActivity extends AppCompatActivity implements
         /* read settings form shared preferences and update location provider and screen */
         checkPermissions();
         setupSharedPreferences();
-        //kk and pass to location provider in service
+
+        /*register broadcast receiver to receive speed updates from service */
+        mSpeedBroadcastReceiver = new MySpeedBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getString(R.string.ACTION_SendSpeedToMain));
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(mSpeedBroadcastReceiver, intentFilter);
     }
 
     /**
@@ -140,7 +146,7 @@ public class MainActivity extends AppCompatActivity implements
         String rate = sharedPreferences.getString(key,
                 Constant.RUNNING_UPDATE_RATE_DEFAULT.toString());
 
-        Log.d(TAG, "updatePrefRunningRate rate: " + rate);
+        //Log.d(TAG, "updatePrefRunningRate rate: " + rate);
         Float rateFloat = Float.valueOf(rate);
         /* convert to milliseconds and store as a long for location update provider */
         rateFloat = rateFloat * 1000F;
@@ -159,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements
         String rate = sharedPreferences.getString(key,
                 Constant.NOT_RUNNING_UPDATE_RATE_DEFAULT.toString());
 
-        Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
+        //Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
         Float rateFloat = Float.valueOf(rate);
         /* convert to milliseconds and store as a long for location update provider */
         rateFloat = rateFloat * 1000F;
@@ -168,42 +174,27 @@ public class MainActivity extends AppCompatActivity implements
 
     protected void onStart() {
         super.onStart();
-        Log.d(TAG, "onStart");
+        //Log.d(TAG, "onStart");
     }
 
-    /**
-     * Sets the location update intervals to the activity running values
-     * register broadcast receiver to receive speed updates from service
-     */
     protected void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
+        //Log.d(TAG, "onResume");
 
-        //register broadcast receiver to receive speed updates from service
-        mSpeedBroadcastReceiver = new MySpeedBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(getString(R.string.ACTION_SendSpeedToMain));
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(mSpeedBroadcastReceiver, intentFilter);
-
-        /* screen now visible and activity running, send new update rate to location provider */
-        sendRateToService(mActivityRunningUpdateRate, false);
+        /* screen now visible, send
+         * running update rate, flag saying to not reset maximum speed, and
+         * flag saying activity is running */
+        sendRateToService(mActivityRunningUpdateRate, false, true);
     }
 
-    /**
-     * Sets the location update intervals to the activity not running values
-     * unregister broadcast receiver so do not receive speed updates from service
-     */
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause");
+        //Log.d(TAG, "onPause");
 
-        //unregister broadcast receiver for speed updates as no longer in focus
-        LocalBroadcastManager.getInstance(this)
-                .unregisterReceiver(mSpeedBroadcastReceiver);
-
-        /* screen not visible and activity not running, send new update rate to location provider */
-        sendRateToService(mActivityNotRunningUpdateRate, false);
+        /* screen now not visible, send
+         * not running update rate, flag saying to not reset maximum speed, and
+         * flag saying activity is not running */
+        sendRateToService(mActivityNotRunningUpdateRate, false, false);
     }
 
     @Override
@@ -211,6 +202,10 @@ public class MainActivity extends AppCompatActivity implements
         super.onDestroy();
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
+
+        /* unregister broadcast receiver for speed updates  */
+        LocalBroadcastManager.getInstance(this)
+                .unregisterReceiver(mSpeedBroadcastReceiver);
 
         //Stop background service
         if (mIntentService != null) {
@@ -221,32 +216,23 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * sends via broadcast location provider update rate to the service and
-     * flag if the maximum speed should be reset
+     * flag if the maximum speed should be reset and
+     * flag if the activit is running
      *
-     * @param rate update rate to be sent to the location provider
+     * @param rate          update rate to be sent to the location provider
      * @param resetMaxSpeed if true tell service to clear max speed
      */
-    private void sendRateToService(long rate, boolean resetMaxSpeed) {
-        Log.d(TAG, "sendRateToService rate: " + rate + " resetMaxSpeed; " + resetMaxSpeed);
+    private void sendRateToService(long rate, boolean resetMaxSpeed, boolean activityRunning) {
+        //Log.d(TAG, "sendRateToService rate: " + rate + " resetMaxSpeed: " + resetMaxSpeed +
+        //        " activityRunning: " + activityRunning);
         /* set up broadcast to pass the running update rate to the service*/
         Intent updateRate = new Intent();
         updateRate.setAction(getString(R.string.ACTION_SendRateToService));
         updateRate.putExtra(getString(R.string.extra_key_rate_value), rate);
         updateRate.putExtra(getString(R.string.extra_key_reset_max_speed), resetMaxSpeed);
+        updateRate.putExtra(getString(R.string.extra_key_main_running), activityRunning);
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .sendBroadcast(updateRate);
-    }
-
-    /**
-     * Checks state of activity ie is it running by accessing a shared preferences key
-     * which is set to true by onResume() and set to false by onPause()
-     *
-     * @return true if activity is running or false if not running
-     */
-    boolean isActivityRunning() {
-        SharedPreferences sp = getSharedPreferences(getString(R.string.pref_activity_state_key),
-                MODE_PRIVATE);
-        return sp.getBoolean(getString(R.string.pref_activity_state_key), false);
     }
 
     /**
@@ -294,7 +280,6 @@ public class MainActivity extends AppCompatActivity implements
     public class MySpeedBroadcastReceiver extends BroadcastReceiver {
         private final String TAG = "SpeedDisplay " + MySpeedBroadcastReceiver.class.getSimpleName();
 
-
         /**
          * Retrieves both speed and maximum speed and displays them both
          *
@@ -305,12 +290,12 @@ public class MainActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             /* get the speed and display it */
             Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
-            Log.d(TAG, "onReceive Speed: " + speed);
+            //Log.d(TAG, "onReceive Speed: " + speed);
             mCurrentSpeedTextView.setText(String.format(Locale.UK, getString(R.string.units_and_number_of_decimals), speed));
 
             /* get the max speed and display it */
             Float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
-            Log.d(TAG, "onReceive maxSpeed: " + maxSpeed);
+            //Log.d(TAG, "onReceive maxSpeed: " + maxSpeed);
             mMaxSpeedTextView.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
         }
     }
@@ -338,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements
         /* check if request to reset maximum speed */
         if (id == R.id.max_reset) {
             /* sends message to service to clear max speed */
-           sendRateToService(mActivityRunningUpdateRate, true);
+            sendRateToService(mActivityRunningUpdateRate, true, true);
             return true;
         }
         /* check if request to navigate to the settings screen */
