@@ -33,11 +33,13 @@
     <string name="pref_title_running_update_rate">Update Rate If Speed App Visible</string>
     <string name="pref_summary_running_update_rate">Rate at which the speed is updated when the application is displayed.</string>
     <string name="pref_dialog_title_running_rate">Dialog Running Title</string>
+    <string name="pref_default_running_rate">"2"</string>
 
     <!-- Activity not runing -->
     <string name="pref_title_not_running_update_rate">Update Rate If Speed App Not Visible</string>
     <string name="pref_summary_not_running_update_rate">Rate at which the speed is updated when the application is not displayed.</string>
     <string name="pref_dialog_title_not_running_rate">Dialog Not Running Title</string>
+    <string name="pref_default_not_running_rate">"30"</string>
 
     <string name="pref_activity_update_rate_dialog">Enter the time in seconds"</string>
 

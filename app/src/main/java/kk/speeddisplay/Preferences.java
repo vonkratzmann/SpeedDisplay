@@ -17,16 +17,16 @@ public class Preferences {
      * @param context context used to get the shared preferences
      * @return location update rate for when activity is running in seconds
      */
-    protected static float getPrefRunningRate(Context context) {
+    protected static String getPrefRunningRate(Context context) {
         SharedPreferences prefs = android.preference.PreferenceManager.
                 getDefaultSharedPreferences(context);
         // get rate
         String key = context.getString(R.string.pref_key_running_update_rate);
-        String defaultRate = Constant.RUNNING_UPDATE_RATE_DEFAULT.toString();
+        String defaultRate = context.getString(R.string.pref_default_running_rate);
         String rate = prefs.getString(key, defaultRate);
 
         //Log.d(TAG, "updatePrefRunningRate rate: " + rate);
-        return Float.valueOf(rate);
+        return rate;
     }
 
     /**
@@ -36,16 +36,16 @@ public class Preferences {
      * @param context context used to get the shared preferences
      * @return location update rate for when activity is not running in seconds
      */
-    protected static float getPrefNotRunningRate(Context context) {
+    protected static String getPrefNotRunningRate(Context context) {
         SharedPreferences prefs = android.preference.PreferenceManager.
                 getDefaultSharedPreferences(context);
         // get rate
         String key = context.getString(R.string.pref_key_not_running_update_rate);
-        String defaultRate = Constant.NOT_RUNNING_UPDATE_RATE_DEFAULT.toString();
+        String defaultRate = context.getString(R.string.pref_default_not_running_rate);
         String rate = prefs.getString(key, defaultRate);
 
         //Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
-        return Float.valueOf(rate);
+        return rate;
     }
 
     /**
