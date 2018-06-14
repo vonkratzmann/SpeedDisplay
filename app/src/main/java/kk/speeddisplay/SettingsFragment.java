@@ -11,9 +11,6 @@ import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceScreen;
 import android.widget.Toast;
 
-import static kk.speeddisplay.MainActivity.checkFloatFormat;
-
-
 public class SettingsFragment extends PreferenceFragmentCompat implements
         SharedPreferences.OnSharedPreferenceChangeListener, Preference.OnPreferenceChangeListener {
 
@@ -38,10 +35,10 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
             }
         }
         /* Attach the listener to the preferences */
-        Preference preference = findPreference(getString(R.string.pref_running_update_rate_key));
+        Preference preference = findPreference(getString(R.string.pref_key_running_update_rate));
         preference.setOnPreferenceChangeListener(this);
 
-        preference = findPreference(getString(R.string.pref_not_running_update_rate_key));
+        preference = findPreference(getString(R.string.pref_key_not_running_update_rate));
         preference.setOnPreferenceChangeListener(this);
     }
 
@@ -90,13 +87,13 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         Toast error = Toast.makeText(getContext(), "Invalid number format", Toast.LENGTH_SHORT);
 
-        String runningRateKey = getString(R.string.pref_running_update_rate_key);
-        String notRunningRateKey = getString(R.string.pref_not_running_update_rate_key);
+        String runningRateKey = getString(R.string.pref_key_running_update_rate);
+        String notRunningRateKey = getString(R.string.pref_key_not_running_update_rate);
 
         if (preference.getKey().equals(runningRateKey) || preference.getKey().equals(notRunningRateKey)) {
             String rate = (String) newValue;
             /* check valid entry */
-            if (checkFloatFormat(rate)) {
+            if (Utilities.checkFloatisPostive(rate)) {
                 return true;
             } else {
                 error.show();

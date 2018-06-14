@@ -114,62 +114,50 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * Retrieves from shared preferences update rates for when activity is running and not running
+     * register listener for any changes to shared preferences,
+     * for the update values, returned a float, convert to milliseconds,
+     * store as a long for location update provider,
+     * (unregistered in onDestroy)
      */
     private void setupSharedPreferences() {
-        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        /* Get the values from shared preferences and store in appropriate variables */
-        getPrefRunningRate(mSharedPref, getString(R.string.pref_running_update_rate_key));
-        getPrefNotRunningRate(mSharedPref, getString(R.string.pref_not_running_update_rate_key));
-        /* register listener for any changes to shared preferences and unregister in onDestroy */
-        mSharedPref.registerOnSharedPreferenceChangeListener(this);
+        //Log.d(TAG, " setupSharedPreferences");
+        float rate;
+
+        rate = Preferences.getPrefRunningRate(this);
+        mActivityRunningUpdateRate = (long) (rate * 1000F);
+        rate = Preferences.getPrefNotRunningRate(this);
+        mActivityNotRunningUpdateRate = (long) (rate * 1000F);
+
+        // register listener
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        pref.registerOnSharedPreferenceChangeListener(this);
     }
 
+    /**
+     * Check which preference changed,
+     * gets the new value which is returned as a float in seconds,
+     * converts this to milliseconds as the location provider uses milliseconds,
+     * stores it in the appropriate global variable as a long
+     *
+     * @param sharedPreferences preference object with the change
+     * @param keyInSecs         key for preference that changed
+     */
     @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        if (key.equals(getString(R.string.pref_running_update_rate_key))) {
-            getPrefRunningRate(sharedPreferences, key);
-        } else if (key.equals(getString(R.string.pref_not_running_update_rate_key))) {
-            getPrefNotRunningRate(sharedPreferences, key);
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String keyInSecs) {
+        float rateInSecs;
+        String key;
+
+        key = getString(R.string.pref_key_running_update_rate);
+        if (keyInSecs.equals(key)) {
+            rateInSecs = Preferences.getPrefRunningRate(this);
+            mActivityRunningUpdateRate =  (long)(rateInSecs * 1000F);
+            return;
         }
-    }
-
-    /**
-     * Gets rate at which location provider provides updates when the activity is running
-     * gets the new rate fom the share preferences
-     * converts it to milliseconds and saves it as a long in the rate variable
-     *
-     * @param sharedPreferences SharedPreference object where preferences are stored
-     * @param key               preference key
-     */
-    private void getPrefRunningRate(SharedPreferences sharedPreferences, String key) {
-        /* get rate, convert to milliseconds, save it as update provider requires milliseconds */
-        String rate = sharedPreferences.getString(key,
-                Constant.RUNNING_UPDATE_RATE_DEFAULT.toString());
-
-        //Log.d(TAG, "updatePrefRunningRate rate: " + rate);
-        Float rateFloat = Float.valueOf(rate);
-        /* convert to milliseconds and store as a long for location update provider */
-        rateFloat = rateFloat * 1000F;
-        mActivityRunningUpdateRate = rateFloat.longValue();
-    }
-
-    /**
-     * Gets rate at which location provider provides updates when the activity is not running
-     * gets the new rate fom the share preferences
-     * converts it to milliseconds and saves it as a long in the rate variable
-     *
-     * @param sharedPreferences SharedPreference object where preferences are stored
-     * @param key               preference key
-     */
-    private void getPrefNotRunningRate(SharedPreferences sharedPreferences, String key) {
-        String rate = sharedPreferences.getString(key,
-                Constant.NOT_RUNNING_UPDATE_RATE_DEFAULT.toString());
-
-        //Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
-        Float rateFloat = Float.valueOf(rate);
-        /* convert to milliseconds and store as a long for location update provider */
-        rateFloat = rateFloat * 1000F;
-        mActivityNotRunningUpdateRate = rateFloat.longValue();
+        key = getString(R.string.pref_key_not_running_update_rate);
+         if (keyInSecs.equals(key)) {
+            rateInSecs = Preferences.getPrefNotRunningRate(this);
+            mActivityNotRunningUpdateRate = (long) (rateInSecs * 1000F);
+        }
     }
 
     protected void onStart() {
@@ -217,14 +205,14 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * sends via broadcast location provider update rate to the service and
      * flag if the maximum speed should be reset and
-     * flag if the activit is running
+     * flag if the activity is running
      *
      * @param rate          update rate to be sent to the location provider
      * @param resetMaxSpeed if true tell service to clear max speed
      */
     private void sendRateToService(long rate, boolean resetMaxSpeed, boolean activityRunning) {
-        //Log.d(TAG, "sendRateToService rate: " + rate + " resetMaxSpeed: " + resetMaxSpeed +
-        //        " activityRunning: " + activityRunning);
+       // Log.d(TAG, "sendRateToService rate: " + rate + " resetMaxSpeed: " + resetMaxSpeed +
+       //         " activityRunning: " + activityRunning);
         /* set up broadcast to pass the running update rate to the service*/
         Intent updateRate = new Intent();
         updateRate.setAction(getString(R.string.ACTION_SendRateToService));
@@ -257,31 +245,12 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    /**
-     * Check strings represents a valid floating point number
-     * and its value is greater than zero and less than the largest Long number
-     * (why anybody would want such a big number, I don't know)
-     *
-     * @param textNumber String which represents a floating point number
-     * @return true if strings represents valid float number
-     */
-    public static boolean checkFloatFormat(String textNumber) {
-        try {
-            Float number = Float.valueOf(textNumber);
-            if (number <= 0 || number >= Long.MAX_VALUE) {
-                return false;
-            }
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
     public class MySpeedBroadcastReceiver extends BroadcastReceiver {
         private final String TAG = "SpeedDisplay " + MySpeedBroadcastReceiver.class.getSimpleName();
 
         /**
          * Retrieves both speed and maximum speed and displays them both
+         * ensures the correct units are displayed with the correct format
          *
          * @param context context
          * @param intent  source of broadcast
@@ -290,13 +259,15 @@ public class MainActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             /* get the speed and display it */
             Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
+            String formattedSpeed = Utilities.formatSpeed(context, speed);
             //Log.d(TAG, "onReceive Speed: " + speed);
-            mCurrentSpeedTextView.setText(String.format(Locale.UK, getString(R.string.units_and_number_of_decimals), speed));
+            mCurrentSpeedTextView.setText(formattedSpeed);
 
             /* get the max speed and display it */
             Float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
             //Log.d(TAG, "onReceive maxSpeed: " + maxSpeed);
-            mMaxSpeedTextView.setText(String.format(Locale.UK, "%1$.1f km/hr", maxSpeed));
+            String formattedMAxSpeed = Utilities.formatSpeed(context, maxSpeed);
+            mMaxSpeedTextView.setText(formattedMAxSpeed);
         }
     }
 

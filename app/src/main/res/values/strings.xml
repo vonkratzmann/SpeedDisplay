@@ -1,5 +1,5 @@
 <resources>
-    <!-- Main activity strings -->
+    <!--Used in Action Bar, and in AndroidManifest to tell the device the name of this app.-->
     <string name="main_activity_title">Speed</string>
 
     <!-- menu titles -->
@@ -14,31 +14,39 @@
     <string name="speed">0.0 km/hr</string>
     <string name="max_speed_title">Maximum Speed</string>
 
+    <!-- display format for speed and maximum speed with one decimal point -->
+    <string name="speed_format_kph">%1$.1f km/hr</string>
+    <string name="speed_format_mph">%1$.1f miles/hr</string>
 
     <!-- Settings activity strings -->
     <string name="settings_activity_title">Settings</string>
 
     <!-- Shared Preferences -->
-    <!-- Shared Preference keys  -->
-    <string name="pref_saved_max_speed_key" translatable="false">savedMaxSpeed</string>
-    <string name="pref_running_update_rate_key" translatable="false">AppsRunning</string>
-    <string name="pref_not_running_update_rate_key" translatable="false">AppsNotRunning</string>
-    <string name="pref_activity_state_key" translatable="false">ActivityState</string>
+    <!-- Shared preference keys  -->
+    <string name="pref_key_saved_max_speed" translatable="false">savedMaxSpeed</string>
+    <string name="pref_key_running_update_rate" translatable="false">AppsRunning</string>
+    <string name="pref_key_not_running_update_rate" translatable="false">AppsNotRunning</string>
+    <string name="pref_key_units" translatable="false">Units</string>
 
-    <string name="pref_saved_max_speed_title">Maximum Speed</string>
+    <!--Shared preference title, dialog, summaries -->
+    <!-- Activity running -->
+    <string name="pref_title_running_update_rate">Update Rate If Speed App Visible</string>
+    <string name="pref_summary_running_update_rate">Rate at which the speed is updated when the application is displayed.</string>
+    <string name="pref_dialog_title_running_rate">Dialog Running Title</string>
 
-    <string name="pref_running_update_rate_title">Update Rate If Speed Visible</string>
-    <string name="pref_running_update_rate_summary">Rate at which the speed is updated when the application is displayed.</string>
-    <string name="pref_running_update_rate_default" translatable="false">2</string>
-
-    <string name="pref_not_running_update_rate_title">Update Rate If Speed Not Visible</string>
-    <string name="pref_not_running_update_rate_summary">Rate at which the speed is updated when the application is not displayed.</string>
-    <string name="pref_not_running_update_rate_default" translatable="false">30</string>
-
-    <string name="pref_dialog_title_running">Dialog Running Title</string>
-    <string name="pref_dialog_title_not_running">Dialog Not Running Title</string>
+    <!-- Activity not runing -->
+    <string name="pref_title_not_running_update_rate">Update Rate If Speed App Not Visible</string>
+    <string name="pref_summary_not_running_update_rate">Rate at which the speed is updated when the application is not displayed.</string>
+    <string name="pref_dialog_title_not_running_rate">Dialog Not Running Title</string>
 
     <string name="pref_activity_update_rate_dialog">Enter the time in seconds"</string>
+
+    <!-- Units -->
+    <string name="pref_title_units_">Speed units</string> <!-- [CHAR LIMIT=30] -->
+    <string name="pref_title_units_metric">Metric</string> <!--[CHAR LIMIT=25] -->
+    <string name="pref_title_units_imperial">Imperial</string> <!--[CHAR LIMIT=25] -->
+    <string name="pref_option_units_metric" translatable="false">metric</string>
+    <string name="pref_option_units_imperial" translatable="false">imperial</string>
 
     <!-- display formatting -->
     <string name="units_and_number_of_decimals">%1$.1f km/hr</string>

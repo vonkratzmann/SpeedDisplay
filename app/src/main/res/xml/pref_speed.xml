@@ -3,21 +3,26 @@
                   xmlns:tools="http://schemas.android.com/tools">
 
     <EditTextPreference
-        android:defaultValue="@string/pref_running_update_rate_default"
         android:dialogMessage="@string/pref_activity_update_rate_dialog"
-        android:key="@string/pref_running_update_rate_key"
+        android:key="@string/pref_key_running_update_rate"
         android:singleLine="false"
-        android:summary="@string/pref_running_update_rate_summary"
-        android:title="@string/pref_running_update_rate_title"
+        android:summary="@string/pref_summary_running_update_rate"
+        android:title="@string/pref_title_running_update_rate"
         tools:singleLine="false"/>
 
     <EditTextPreference
-        android:defaultValue="@string/pref_not_running_update_rate_default"
         android:dialogMessage="@string/pref_activity_update_rate_dialog"
-        android:key="@string/pref_not_running_update_rate_key"
+        android:key="@string/pref_key_not_running_update_rate"
         android:singleLine="false"
-        android:summary="@string/pref_not_running_update_rate_summary"
-        android:title="@string/pref_not_running_update_rate_title"
+        android:summary="@string/pref_summary_not_running_update_rate"
+        android:title="@string/pref_title_not_running_update_rate"
         tools:singleLine="false"/>
+
+    <ListPreference
+        android:defaultValue="@string/pref_option_units_metric"
+        android:entries="@array/pref_units_options"
+        android:entryValues="@array/pref_units_values"
+        android:key="@string/pref_key_units"
+        android:title="@string/pref_title_units_" />
 
 </PreferenceScreen>

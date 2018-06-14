@@ -35,7 +35,7 @@ public class GetSpeedService extends Service {
 
     private boolean mMainActivityRunning;
 
-    /* gets update rate for the location provider from the main activity */
+    // gets update rate and other flags from the main activity
     BroadcastReceiver mRateBroadcastReceiver;
 
     public GetSpeedService() {
@@ -85,10 +85,23 @@ public class GetSpeedService extends Service {
             }
         };
         /* initially set the update rate to the default value
-         * covert to millisecods before pass to location provider */
+         * covert to milliseconds before pass to location provider */
         setLocationUpdateRate(Constant.RUNNING_UPDATE_RATE_DEFAULT * 1000L);
     }
 
+    /**
+     *
+     * Builds a notification intent and,
+     * runs the service in the foreground,
+     * request location updates form Fused location client,
+     * gets the maximum speed saved in the preferences and sends it to main for display
+     *
+     *
+     * @param intent    called by intent
+     * @param flags     flags from intent
+     * @param startId   id of start
+     * @return   Integer that describes how the system should continue the service in the event that the system kills it
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
@@ -110,7 +123,7 @@ public class GetSpeedService extends Service {
 
         startForeground(Constant.ONGOING_NOTIFICATION_ID, notification);
 
-        /* start the location provider */
+        // start the location provider
         try {
             mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
         } catch (
@@ -118,27 +131,22 @@ public class GetSpeedService extends Service {
             //Log.d(TAG, "onStartCommand permission denied");
             Log.e(TAG, getString(R.string.permission_denied));
         }
-
         //register broadcast receiver to receive rate updates from main activity
-        mRateBroadcastReceiver = new MyRateBroadcastReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(getString(R.string.ACTION_SendRateToService));
-        LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(mRateBroadcastReceiver, intentFilter);
+        registerBroadcastReceiver();
 
-        /* get max speed from preferences and send it to main activity for display */
-        mMaxSpeed = getPrefMaxSpeed();
-
-        /* send to main activity, speed is zero initially,
-         * but will be updated when location provider provides updates
+        /* get max speed from preferences and
+         * send it to main activity for display
+         * speed is zero initially, but will be updated when location provider provides updates
          */
+        mMaxSpeed = Preferences.getPrefMaxSpeed(this);
         sendToMain(0.0F, mMaxSpeed);
 
         /* If the system kills the service after onStartCommand() returns,
-         * recreate the service and call onStartCommand()
-         * with the last intent that was delivered to the service.
+         * recreate the service and call onStartCommand(),
+         *  but do not redeliver the last intent. Instead, the system calls onStartCommand()
+         *  with a null intent unless there are pending intents to start the service.
          */
-        return START_REDELIVER_INTENT;
+        return START_STICKY;
     }
 
     @Nullable
@@ -180,15 +188,16 @@ public class GetSpeedService extends Service {
     }
 
     /**
-     * Retrieves saved maximum speed from Shared preferences
-     *
-     * @return maximum speed
+     * Registers the broadcast receiver to receive rate updates from main activity
+     * saves it in the global variable
      */
-    private float getPrefMaxSpeed() {
-        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        float maxSpeed = mSharedPref.getFloat(getString(R.string.pref_saved_max_speed_key), 0.0F);
-        //Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(maxSpeed));
-        return maxSpeed;
+
+    private void registerBroadcastReceiver() {
+        mRateBroadcastReceiver = new MyRateBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(getString(R.string.ACTION_SendRateToService));
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(mRateBroadcastReceiver, intentFilter);
     }
 
     /**
@@ -224,6 +233,7 @@ public class GetSpeedService extends Service {
             //Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
             /* save new maximum speed to shared preferences */
             saveMaxSpeed(speed);
+            // return the new maximum speed
             return speed;
         }
         return maxSpeed;
@@ -239,7 +249,7 @@ public class GetSpeedService extends Service {
         /* save maximum speed to shared preferences */
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor mEditor = mSharedPref.edit();
-        mEditor.clear().putFloat(getString(R.string.pref_saved_max_speed_key), maxSpeed).apply();
+        mEditor.clear().putFloat(getString(R.string.pref_key_saved_max_speed), maxSpeed).apply();
     }
 
     public class MyRateBroadcastReceiver extends BroadcastReceiver {
@@ -248,7 +258,8 @@ public class GetSpeedService extends Service {
         /**
          * gets the update rate from the intent and updates the location provider
          * checks if we need to reset the maximum speed, if yes, zero maximum speed,
-         * save it in the preferences and send new maximum speed back to main for display
+         * save it in the preferences and send new maximum speed back to main for display,
+         * updates flag indicating if main activity is running or not running
          *
          * @param context context
          * @param intent  broadcast intent
