@@ -57,9 +57,10 @@ public class Preferences {
     protected static boolean isMetric(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String keyForUnits = context.getString(R.string.pref_key_units);
-        String defaultUnits = context.getString(R.string.pref_option_units_metric);
+        String defaultUnits = context.getString(R.string.pref_value_units_metric);
+
         String preferredUnits = prefs.getString(keyForUnits, defaultUnits);
-        String metric = context.getString(R.string.pref_option_units_metric);
+        String metric = context.getString(R.string.pref_value_units_metric);
         return metric.equals(preferredUnits);
     }
 

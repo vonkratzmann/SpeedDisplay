@@ -29,13 +29,13 @@
     <string name="pref_key_units" translatable="false">Units</string>
 
     <!--Shared preference title, dialog, summaries -->
-    <!-- Activity running -->
+    <!-- EditText Preference Activity running -->
     <string name="pref_title_running_update_rate">Update Rate If Speed App Visible</string>
     <string name="pref_summary_running_update_rate">Rate at which the speed is updated when the application is displayed.</string>
     <string name="pref_dialog_title_running_rate">Dialog Running Title</string>
     <string name="pref_default_running_rate">"2"</string>
 
-    <!-- Activity not runing -->
+    <!-- EditText Preference Activity not running -->
     <string name="pref_title_not_running_update_rate">Update Rate If Speed App Not Visible</string>
     <string name="pref_summary_not_running_update_rate">Rate at which the speed is updated when the application is not displayed.</string>
     <string name="pref_dialog_title_not_running_rate">Dialog Not Running Title</string>
@@ -43,12 +43,12 @@
 
     <string name="pref_activity_update_rate_dialog">Enter the time in seconds"</string>
 
-    <!-- Units -->
+    <!-- ListPreference Units -->
     <string name="pref_title_units_">Speed units</string> <!-- [CHAR LIMIT=30] -->
     <string name="pref_title_units_metric">Metric</string> <!--[CHAR LIMIT=25] -->
     <string name="pref_title_units_imperial">Imperial</string> <!--[CHAR LIMIT=25] -->
-    <string name="pref_option_units_metric" translatable="false">metric</string>
-    <string name="pref_option_units_imperial" translatable="false">imperial</string>
+    <string name="pref_value_units_metric" translatable="false">metric</string>
+    <string name="pref_value_units_imperial" translatable="false">imperial</string>
 
     <!-- display formatting -->
     <string name="units_and_number_of_decimals">%1$.1f km/hr</string>

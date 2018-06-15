@@ -21,9 +21,9 @@
         tools:singleLine="false"/>
 
     <ListPreference
-        android:defaultValue="@string/pref_option_units_metric"
-        android:entries="@array/pref_units_options"
-        android:entryValues="@array/pref_units_values"
+        android:defaultValue="@string/pref_value_units_metric"
+        android:entries="@array/pref_units_list_array"
+        android:entryValues="@array/pref_units_list_values"
         android:key="@string/pref_key_units"
         android:title="@string/pref_title_units_" />
 
