@@ -41,7 +41,7 @@ public final class Utilities {
      * @return speed in miles/hour (mph)
      */
     private static float kphToMph(float speedInKph) {
-        return speedInKph * 1.6214F;
+        return speedInKph * .6214F;
     }
 
     /**
@@ -52,7 +52,7 @@ public final class Utilities {
      * @param textNumber    String which represents a floating point number
      * @return true if strings represents valid float number
      */
-    public static boolean checkFloatisPostive(String textNumber) {
+    public static boolean checkFloatIsPostive(String textNumber) {
         try {
             Float number = Float.valueOf(textNumber);
             if (number <= 0 || number >= Long.MAX_VALUE) {

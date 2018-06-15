@@ -11,14 +11,43 @@ package kk.speeddisplay;
  * Here stored as a float;
  */
 
+import android.content.Context;
+
 public class UpdateRate {
     private float rate;
 
+    /**
+     * getter for stored rate
+     *
+     * @return rate in milliseconds
+     */
     protected long getRateInMilliSecs() {
         return (long) (rate * 1000F);
     }
 
-    public void setmRate(String rate) {
-       this.rate = Float.parseFloat(rate);
+    /**
+     * Returns the default running rate as a long in milliseconds
+     * the default rate used is always the activity running rate
+     *
+     * @return default rate in milliseconds
+     */
+    protected long getDefaultRunningRateInMilliSecs(Context context) {
+
+        String rate = context.getString(R.string.pref_default_running_rate);
+        Float rateFloat = Float.valueOf(rate);
+
+        //convert to milliseconds, before the change to long because the rate can be a decimal
+        rateFloat *= 1000F;
+        return rateFloat.longValue();
     }
+
+    /**
+     * Setter which takes a string and then saves the rate as a float
+     *
+     * @param rate  new rate
+     */
+    protected void setRate(String rate) {
+        this.rate = Float.parseFloat(rate);
+    }
+
 }

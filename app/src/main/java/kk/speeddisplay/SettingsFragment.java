@@ -93,7 +93,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         if (preference.getKey().equals(runningRateKey) || preference.getKey().equals(notRunningRateKey)) {
             String rate = (String) newValue;
             /* check valid entry */
-            if (Utilities.checkFloatisPostive(rate)) {
+            if (Utilities.checkFloatIsPostive(rate)) {
                 return true;
             } else {
                 error.show();
