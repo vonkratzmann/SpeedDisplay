@@ -5,20 +5,18 @@
     <EditTextPreference
         android:dialogMessage="@string/pref_activity_update_rate_dialog"
         android:key="@string/pref_key_running_update_rate"
-        android:singleLine="false"
+        android:singleLine="true"
         android:summary="@string/pref_summary_running_update_rate"
         android:title="@string/pref_title_running_update_rate"
-        android:defaultValue="@string/pref_default_running_rate"
-        tools:singleLine="false"/>
+        android:defaultValue="@string/pref_default_running_rate"/>
 
     <EditTextPreference
         android:dialogMessage="@string/pref_activity_update_rate_dialog"
         android:key="@string/pref_key_not_running_update_rate"
-        android:singleLine="false"
+        android:singleLine="true"
         android:summary="@string/pref_summary_not_running_update_rate"
         android:title="@string/pref_title_not_running_update_rate"
-        android:defaultValue="@string/pref_default_not_running_rate"
-        tools:singleLine="false"/>
+        android:defaultValue="@string/pref_default_not_running_rate"/>
 
     <ListPreference
         android:defaultValue="@string/pref_value_units_metric"

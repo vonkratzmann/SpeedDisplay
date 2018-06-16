@@ -6,9 +6,14 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.EditTextPreference;
+import android.util.Log;
 import android.view.MenuItem;
 
 public class SettingsActivity extends AppCompatActivity {
+
+    private final static String TAG = "SpeedDisplay" + SettingsActivity.class.getSimpleName();
+
     /* use to suppress error for line 'actionBar.setDefaultDisplayHomeAsUpEnabled(true);' */
     @SuppressLint("RestrictedApi")
     @Override
@@ -20,7 +25,7 @@ public class SettingsActivity extends AppCompatActivity {
         // Set the action bar back button to look like an up button
         if (actionBar != null) {
 
-         actionBar.setDefaultDisplayHomeAsUpEnabled(true);
+            actionBar.setDefaultDisplayHomeAsUpEnabled(true);
         }
     }
 
@@ -33,5 +38,16 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+//    @Override
+//    public boolean onPreferenceClick(Preference preference)
+//    {
+//        Log.d(TAG, "onPreferenceClick");
+//        EditTextPreference editPref = (EditTextPreference) preference;
+//        editPref.getEditText().setSelection(editPref.getText().length());
+//        return true;
+//    }
+
+
 }
 

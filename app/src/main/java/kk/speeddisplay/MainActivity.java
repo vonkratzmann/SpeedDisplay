@@ -18,6 +18,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -256,15 +257,14 @@ public class MainActivity extends AppCompatActivity implements
          */
         @Override
         public void onReceive(Context context, Intent intent) {
-            /* get the speed and display it */
+            // get the speed, format the speed, make spannable and display it
             Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
             String formattedSpeed = Utilities.formatSpeed(context, speed);
-            //Log.d(TAG, "onReceive Speed: " + speed);
-            mCurrentSpeedTextView.setText(formattedSpeed);
+            SpannableString spannedSpeed =  Utilities.spanSpeed(formattedSpeed);
+            mCurrentSpeedTextView.setText(spannedSpeed);
 
-            /* get the max speed and display it */
+            /* get the max speed, format it  and display it */
             Float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
-            //Log.d(TAG, "onReceive maxSpeed: " + maxSpeed);
 
             String formattedMAxSpeed = Utilities.formatSpeed(context, maxSpeed);
             mMaxSpeedTextView.setText(formattedMAxSpeed);

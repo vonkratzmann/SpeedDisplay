@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
+    tools:layout_editor_absoluteY="81dp"
     tools:showIn="@layout/activity_main">
 
     <TextView
@@ -14,13 +15,12 @@
         style="@style/LargeTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="128dp"
         android:gravity="center"
         android:text="@string/speed"
-        app:layout_constraintBottom_toTopOf="@+id/tv_MaxSpeedTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
         app:layout_constraintVertical_chainStyle="spread"/>
 
     <TextView
@@ -28,27 +28,29 @@
         style="@style/MediumTextViewHeading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@layout/rounded_border_tv"
         android:gravity="center"
         android:text="@string/max_speed_title"
         app:layout_constraintBottom_toTopOf="@+id/tv_MaxSpeed"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        android:background="@layout/rounded_border_tv"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/tv_CurrentSpeed"
+        app:layout_constraintVertical_bias="0.9"
+        app:layout_constraintVertical_chainStyle="packed"/>
 
     <TextView
         android:id="@+id/tv_MaxSpeed"
         style="@style/MediumTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="48dp"
+        android:layout_marginBottom="32dp"
+        android:background="@layout/rounded_border_tv"
         android:gravity="center"
         android:text="@string/max_speed_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        android:background="@layout/rounded_border_tv"/>
+        />
 
 </android.support.constraint.ConstraintLayout>

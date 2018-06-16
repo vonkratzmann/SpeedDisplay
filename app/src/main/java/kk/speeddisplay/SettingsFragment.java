@@ -1,6 +1,7 @@
 package kk.speeddisplay;
 
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.preference.CheckBoxPreference;
@@ -9,10 +10,15 @@ import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.preference.PreferenceScreen;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 public class SettingsFragment extends PreferenceFragmentCompat implements
         SharedPreferences.OnSharedPreferenceChangeListener, Preference.OnPreferenceChangeListener {
+
+    public final static String TAG = "SpeedDisplay" + SettingsFragment.class.getSimpleName();
 
     @Override
     public void onCreatePreferences(Bundle bundle, String rootKey) {
@@ -34,6 +40,7 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
                 setPreferenceSummary(p, value);
             }
         }
+
         /* Attach the listener to the preferences */
         Preference preference = findPreference(getString(R.string.pref_key_running_update_rate));
         preference.setOnPreferenceChangeListener(this);
@@ -116,4 +123,6 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
         getPreferenceScreen().getSharedPreferences()
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
+
+
 }

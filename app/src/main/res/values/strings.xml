@@ -11,12 +11,12 @@
     <string name="quit">Quit</string>
 
     <!-- text/edit views default values and text -->
-    <string name="speed">0.0 km/hr</string>
-    <string name="max_speed_title">Maximum Speed</string>
+    <string name="speed">0.0 km/h</string>
+        <string name="max_speed_title">Maximum Speed</string>
 
     <!-- display format for speed and maximum speed with one decimal point -->
-    <string name="speed_format_kph">%1$.1f km/hr</string>
-    <string name="speed_format_mph">%1$.1f miles/hr</string>
+    <string name="speed_format_kph">%1$.1f km/h</string>
+    <string name="speed_format_mph">%1$.1f mph</string>
 
     <!-- Settings activity strings -->
     <string name="settings_activity_title">Settings</string>
