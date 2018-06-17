@@ -15,6 +15,7 @@
         style="@style/LargeTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="@layout/rounded_border_tv"
         android:layout_marginTop="128dp"
         android:gravity="center"
         android:text="@string/speed"
