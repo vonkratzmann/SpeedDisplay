@@ -45,7 +45,7 @@ public final class Utilities {
         int end = speed.length();
         SpannableString ss = new SpannableString(speed);
         ss.setSpan(new RelativeSizeSpan(.5f), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        Log.d(TAG, "ss: " + ss.toString() + " " + start + " " + end);
+        //Log.d(TAG, "ss: " + ss.toString() + " " + start + " " + end);
         return ss;
     }
 

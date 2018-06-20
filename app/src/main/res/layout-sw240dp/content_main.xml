@@ -23,6 +23,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.50"
         app:layout_constraintVertical_chainStyle="spread_inside"/>
 
     <TextView
@@ -35,10 +36,9 @@
         android:text="@string/max_speed_title"
         app:layout_constraintBottom_toTopOf="@+id/tv_MaxSpeed"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_CurrentSpeed"
-        app:layout_constraintVertical_bias="0.9"
         app:layout_constraintVertical_chainStyle="packed"/>
 
     <TextView

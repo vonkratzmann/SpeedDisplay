@@ -21,6 +21,7 @@
     <style name="LargeTextView" parent="Theme.AppCompat.Light">
         <item name="android:textSize">@dimen/large_text_size</item>
         <item name="android:padding">@dimen/large_padding</item>
+        <item name="android:layout_marginBottom">@dimen/large_margin_bottom</item>
         <item name="android:background">@color/colorPrimary</item>
         <item name="android:textColor">@color/White</item>
     </style>
@@ -28,25 +29,27 @@
     <style name="MediumTextView" parent="Theme.AppCompat.Light">
         <item name="android:textSize">@dimen/medium_text_size</item>
         <item name="android:padding">@dimen/medium_padding</item>
+        <item name="android:layout_marginBottom">@dimen/medium_margin_bottom</item>
         <item name="android:background">@color/colorPrimary</item>
         <item name="android:textColor">@color/White</item>
-        <item name="android:layout_marginTop">12dp</item>
-        <item name="android:layout_marginBottom">64dp</item>
     </style>
 
-    <style name="MediumTextViewHeading" parent="Theme.AppCompat.Light">
-        <item name="android:textSize">@dimen/medium_text_size</item>
-        <item name="android:padding">@dimen/medium_padding</item>
-        <item name="android:background">@color/colorPrimary</item>
-        <item name="android:textColor">@color/White</item>
-        <item name="android:layout_margin">12dp</item>
-    </style>
+
 
     <style name="SmallTextView" parent="Theme.AppCompat.Light">
         <item name="android:textSize">@dimen/small_text_size</item>
         <item name="android:padding">@dimen/small_padding</item>
+        <item name="android:layout_marginBottom">@dimen/small_margin_bottom</item>
         <item name="android:background">@color/colorPrimary</item>
         <item name="android:textColor">@color/White</item>
+
+    </style>
+
+    <style name="maxspeed" parent="Theme.AppCompat.Light">
+        <item name="android:textSize">@dimen/small_text_size</item>
+        <item name="android:padding">@dimen/small_padding</item>
+        <item name="android:background">@layout/rounded_border_tv</item>
+        <item name="android:gravity">center</item>
     </style>
 
 </resources>
