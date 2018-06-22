@@ -15,42 +15,61 @@
         style="@style/LargeTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="8dp"
         android:background="@layout/rounded_border_tv"
         android:gravity="center"
         android:text="@string/speed"
+        app:layout_constraintBottom_toTopOf="@+id/tv_MaxSpeedTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="spread"/>
+        app:layout_constraintVertical_chainStyle="spread_inside"/>
 
     <TextView
         android:id="@+id/tv_MaxSpeedTitle"
         style="@style/MediumTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
         android:background="@layout/rounded_border_tv"
         android:gravity="center"
         android:text="@string/max_speed_title"
-        app:layout_constraintBottom_toTopOf="@+id/tv_MaxSpeed"
+        app:layout_constraintBottom_toTopOf="@+id/guideline"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_CurrentSpeed"
-        app:layout_constraintVertical_bias="0.9"
-        app:layout_constraintVertical_chainStyle="packed"/>
+        />
 
     <TextView
         android:id="@+id/tv_MaxSpeed"
         style="@style/MediumTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
         android:background="@layout/rounded_border_tv"
         android:gravity="center"
         android:text="@string/max_speed_title"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        />
+        app:layout_constraintTop_toBottomOf="@+id/guideline"/>
 
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.75"/>
+
+    <TextView
+        android:id="@+id/test"
+        style="@style/SmallTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@layout/rounded_border_tv"
+        android:ems="10"
+        android:text="landscape"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp"/>
 </android.support.constraint.ConstraintLayout>
