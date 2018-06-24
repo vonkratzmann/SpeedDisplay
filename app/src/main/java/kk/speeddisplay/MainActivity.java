@@ -36,8 +36,7 @@ import java.util.Locale;
  * <p>
  * User is able to specify the update intervals at which the activity will receive location updates,
  * separate update intervals for when the activity is running and not running.
- * The update intervals are saved in the shared preferences and
- * can be changed by the user in settings.
+ * The update intervals are saved in the shared preferences.
  * If the update intervals are changed by the user or if the activity state changes,
  * the appropriate rates are sent to the service via a broadcast.
  * Within the broadcast for the update intervals , there are two flags:
@@ -48,9 +47,12 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener {
 
-    /* get a tag for output debugging */
+    // get a tag for output debugging
     private final static String TAG = "SpeedDisplay " + MainActivity.class.getSimpleName();
+
+    // used to start foreground service
     Intent mService;
+
     /* displays current speed from the location provider in the foreground service */
     private TextView mCurrentSpeedTextView;
     /* displays maximum speed recorded to date,
@@ -58,8 +60,10 @@ public class MainActivity extends AppCompatActivity implements
      * max speed is saved in the shared preferences by the foreground service
      */
     private TextView mMaxSpeedTextView;
+
     /* gets speed updates from foreground service */
     private MySpeedBroadcastReceiver mSpeedBroadcastReceiver;
+
     /* update intervals at which the activity will receive location updates,
      * separate update intervals for when the activity is running and not running
      * the update interval is saved in the shared preferences
@@ -83,16 +87,19 @@ public class MainActivity extends AppCompatActivity implements
         mCurrentSpeedTextView = findViewById(R.id.tv_CurrentSpeed);
         mMaxSpeedTextView = findViewById(R.id.tv_MaxSpeed);
 
-        /* read settings form shared preferences and update location provider and screen */
-        checkPermissions();
-        setupSharedPreferences();
-
-        /*register broadcast receiver to receive speed updates from service */
+        //register broadcast receiver to receive speed updates from service
         mSpeedBroadcastReceiver = new MySpeedBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(getString(R.string.ACTION_SendSpeedToMain));
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(mSpeedBroadcastReceiver, intentFilter);
+
+        //read settings from shared preferences
+        setupSharedPreferences();
+
+        //check permissions and if ok start foreground service
+        checkPermissions();
+
     }
 
     /**

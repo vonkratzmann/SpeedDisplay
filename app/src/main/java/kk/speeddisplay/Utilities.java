@@ -2,6 +2,7 @@ package kk.speeddisplay;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.RelativeSizeSpan;
@@ -86,5 +87,39 @@ public final class Utilities {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Checks if speed above previously maximum speed
+     * if so save the new maximum speed in the preferences
+     * always return the maximum speed, either the old maximum or the new maximum
+     *
+     * @param speed    latest speed from the location provider
+     * @param maxSpeed current maximum speed
+     * @return float    always return the maximum speed
+     */
+    public float checkMaxSpeed(Context context, float speed, float maxSpeed) {
+        if (speed > maxSpeed) {
+            /* we have a new maximum speed */
+            //Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
+            /* save new maximum speed to shared preferences */
+            saveMaxSpeed(context, speed);
+            // return the new maximum speed
+            return speed;
+        }
+        return maxSpeed;
+    }
+
+    /**
+     * save maximum speed to shared preferences
+     *
+     * @param maxSpeed maximum speed to be saved
+     */
+    public void saveMaxSpeed(Context context, float maxSpeed) {
+        //Log.d(TAG, "saveMaxSpeed maxSpeed: " + maxSpeed);
+        /* save maximum speed to shared preferences */
+        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor mEditor = mSharedPref.edit();
+        mEditor.clear().putFloat(context.getString(R.string.pref_key_saved_max_speed), maxSpeed).apply();
     }
 }

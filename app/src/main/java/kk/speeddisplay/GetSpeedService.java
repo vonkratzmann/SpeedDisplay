@@ -60,7 +60,9 @@ public class GetSpeedService extends Service {
     private ServiceHandler mServiceHandler;
 
     // class that stores the update rate
-    private  UpdateRate mUpdateRate;
+    private UpdateRate mUpdateRate;
+
+    private Utilities mUtilities;
 
     public GetSpeedService() {
         super();
@@ -71,12 +73,27 @@ public class GetSpeedService extends Service {
     public void onCreate() {
         super.onCreate();
         //Log.d(TAG, "onCreate");
+        //initially say main activity is running
+        mMainActivityRunning = true;
+
+        mUtilities = new Utilities();
 
         // An Android handler thread internally operates on a looper.
         mHandlerThread = new HandlerThread("GetSpeed.HandlerThread");
         mHandlerThread.start();
         // An Android service handler is a handler running on a specific background thread.
         mServiceHandler = new ServiceHandler(mHandlerThread.getLooper());
+
+        //set background priority so CPU-intensive work doesn't disrupt our UI
+        Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+
+        //initialise new update rate which stores the update rates
+        mUpdateRate = new UpdateRate();
+
+        //register broadcast receiver to receive rate updates from main activity
+        registerBroadcastReceiver();
+        //send to main maxspeed so it can be displayed on the UI
+        sendToMain(0.0F, mMaxSpeed);
     }
 
     /**
@@ -92,106 +109,99 @@ public class GetSpeedService extends Service {
      */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         //Log.d(TAG, "onStartCommand");
 
         mServiceHandler.post(new Runnable() {
             @Override
             public void run() {
-                // set background priority so CPU-intensive work doesn't disrupt our UI
-                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 
-                mUpdateRate = new UpdateRate();
+                //send notification to the main activity and run as a foreground service
+                sendNotification();
 
-                /* send notification to the main activity and run as a foreground service */
-                Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
-
-                PendingIntent pendingIntent =
-                        PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
-
-                Notification notification = new NotificationCompat.Builder(getApplicationContext(), "default")
-                        .setContentTitle(getText(R.string.notification_title))
-                        .setContentText(getText(R.string.notification_message))
-                        .setSmallIcon(R.drawable.speed)
-                        .setContentIntent(pendingIntent)
-                        .setTicker(getText(R.string.notification_ticker_text))
-                        .build();
-
-                startForeground(Constant.ONGOING_NOTIFICATION_ID, notification);
-
-                /* set up fused location client, which is API from Google Play Services  */
+                //set up fused location client, which is API from Google Play Services
                 mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
                 /* use the location request to set up the parameters for the fused location provider */
                 mLocationRequest = new LocationRequest();
+                startLocationService();
 
-                /* set up the location callback for when the location has changed */
-                mLocationCallback = new LocationCallback() {
-                    /* LocationResult a data class representing a geographic location result
-                     * from the fused location provider */
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        if (locationResult == null) {
-                            //Log.d(TAG, "onLocationResult locationResult=null");
-                            return;
-                        }
-                        /* process all locations provided */
-                        for (Location location : locationResult.getLocations()) {
-                            float speed = location.getSpeed();
-                            /* convert speed from metres/sec to km/hour */
-                            speed = speed * 3600F / 1000F;
-
-                            //check if speed has changed, only process if there has been a change
-                            if (savedSpeed != speed) {
-                                savedSpeed = speed;
-                                //Log.d(TAG, "onLocationResult Speed: " + speed);
-                                //check if previous max speed has been exceeded
-                                mMaxSpeed = checkMaxSpeed(speed, mMaxSpeed);
-                                /* sends speed and max speed to main activity each time,
-                                 * rather than sending flags which say maxSpeed has changed and
-                                 * then having code to check the flags and update the maxSpeed.
-                                 * Only send to main activity via broadcast if main activity running
-                                 */
-                                if (mMainActivityRunning) {
-                                    sendToMain(speed, mMaxSpeed);
-                                }
-                            }
-                        }
-                    }
-                };
-
-                /* initially set the update rate to the default value.
-                 * Rate has to be in  milliseconds for the location provider.
+                /* set the update rate in  millisecs for the location provider to the default value.
                  * Fused location client does not work without an update rate before it is started
                  * The broadcasts from the main activity will update with the real update rate*/
                 Context context = getApplicationContext();
                 setLocationUpdateRate(mUpdateRate.getDefaultRunningRateInMilliSecs(context));
 
-                // start the location provider
+                // start the updates from the location provider
                 try {
                     mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
                 } catch (
                         SecurityException securityException) {
                     Log.e(TAG, getString(R.string.permission_denied));
                 }
-
-                //register broadcast receiver to receive rate updates from main activity
-                registerBroadcastReceiver();
-
-                /* get max speed from preferences and
-                 * send it to main activity for display
-                 * speed is zero initially, but will be updated when location provider provides updates
-                 */
-                mMaxSpeed = Preferences.getPrefMaxSpeed(getApplicationContext());
-                sendToMain(0.0F, mMaxSpeed);
             }
         });
-
         /* If the system kills the service after onStartCommand() returns,
-         * recreate the service and call onStartCommand(),
-         *  but do not redeliver the last intent. Instead, the system calls onStartCommand()
-         *  with a null intent unless there are pending intents to start the service.
+         * recreate the service and call onStartCommand()
          */
         return START_STICKY;
+    }
+
+    /**
+     * send notification to the main activity and run as a foreground service
+     */
+    private void sendNotification() {
+        /* send notification to the main activity and run as a foreground service */
+        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
+
+        Notification notification = new NotificationCompat.Builder(getApplicationContext(), "default")
+                .setContentTitle(getText(R.string.notification_title))
+                .setContentText(getText(R.string.notification_message))
+                .setSmallIcon(R.drawable.speed)
+                .setContentIntent(pendingIntent)
+                .setTicker(getText(R.string.notification_ticker_text))
+                .build();
+
+        startForeground(Constant.ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    /**
+     *
+     */
+    private void startLocationService() {
+        /* set up the location callback for when the location has changed */
+        mLocationCallback = new LocationCallback() {
+            /* LocationResult a data class representing a geographic location result
+             * from the fused location provider */
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    //Log.d(TAG, "onLocationResult locationResult=null");
+                    return;
+                }
+                /* process all locations provided */
+                for (Location location : locationResult.getLocations()) {
+                    float speed = location.getSpeed();
+                    /* convert speed from metres/sec to km/hour */
+                    speed = speed * 3600F / 1000F;
+
+                    //check if speed has changed, only process if there has been a change
+                    if (savedSpeed != speed) {
+                        savedSpeed = speed;
+                        //Log.d(TAG, "onLocationResult Speed: " + speed);
+                        //check if previous max speed has been exceeded
+                        mMaxSpeed = mUtilities.checkMaxSpeed(getApplicationContext(), speed, mMaxSpeed);
+                        /* sends speed and max speed to main activity each time,
+                         * Only send to main activity via broadcast if main activity running
+                         */
+                        if (mMainActivityRunning) {
+                            sendToMain(speed, mMaxSpeed);
+                        }
+                    }
+                }
+            }
+        };
     }
 
     @Nullable
@@ -265,40 +275,6 @@ public class GetSpeedService extends Service {
                 .addLocationRequest(mLocationRequest);
     }
 
-    /**
-     * Checks if speed above previously maximum speed
-     * if so save the new maximum speed in the preferences
-     * always return the maximum speed, either the old maximum or the new maximum
-     *
-     * @param speed    latest speed from the location provider
-     * @param maxSpeed current maximum speed
-     * @return float    always return the maximum speed
-     */
-    private float checkMaxSpeed(float speed, float maxSpeed) {
-        if (speed > maxSpeed) {
-            /* we have a new maximum speed */
-            //Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
-            /* save new maximum speed to shared preferences */
-            saveMaxSpeed(speed);
-            // return the new maximum speed
-            return speed;
-        }
-        return maxSpeed;
-    }
-
-    /**
-     * save maximum speed to shared preferences
-     *
-     * @param maxSpeed maximum speed to be saved
-     */
-    private void saveMaxSpeed(float maxSpeed) {
-        //Log.d(TAG, "saveMaxSpeed maxSpeed: " + maxSpeed);
-        /* save maximum speed to shared preferences */
-        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor mEditor = mSharedPref.edit();
-        mEditor.clear().putFloat(getString(R.string.pref_key_saved_max_speed), maxSpeed).apply();
-    }
-
     public class MyRateBroadcastReceiver extends BroadcastReceiver {
         private final String TAG = "SpeedDisplay " + MyRateBroadcastReceiver.class.getSimpleName();
 
@@ -324,7 +300,7 @@ public class GetSpeedService extends Service {
             boolean resetMaxSpeed = intent.getBooleanExtra(getString(R.string.extra_key_reset_max_speed), false);
             if (resetMaxSpeed) {
                 mMaxSpeed = 0.0F;
-                saveMaxSpeed(mMaxSpeed);
+                mUtilities.saveMaxSpeed(context, mMaxSpeed);
                 sendToMain(savedSpeed, mMaxSpeed);
             }
 
@@ -344,6 +320,6 @@ public class GetSpeedService extends Service {
         // Define how to handle any incoming messages here
         @Override
         public void handleMessage(Message message) {
-         }
+        }
     }
 } //end of class GetSpeedService
