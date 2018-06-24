@@ -53,17 +53,6 @@
         app:layout_constraintTop_toBottomOf="@+id/guideline"
         app:layout_constraintVertical_bias="0.51"/>
 
-    <TextView
-        android:id="@+id/test"
-        style="@style/SmallTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@layout/rounded_border_tv"
-        android:ems="10"
-        android:text="normal"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp"/>
-
     <android.support.constraint.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"

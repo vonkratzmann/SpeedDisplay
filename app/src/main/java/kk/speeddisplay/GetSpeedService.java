@@ -27,6 +27,19 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 
+/*
+ * Implements a foreground service to get speed from the Fused Location provider.
+ * This services runs continuously until stopped by the user.
+ * Checks if the speed is above the previous maximum, and if it is saves the new maximum
+ * in the preferences.
+ * Sends current speed and maximum speed via a broadcast to the main activity.
+ * If the main activity is not visible, the current & max speeds are not sent to the main activity.
+ * Sets up a broadcast receiver to receive the update rate at which the the location provider
+ * should provide location updates. The broadcast receiver also process two flags:
+ *  1. if the main activity is visible or not visible,
+ *  2. if we need to reset the maximum speed because the user has reset the maximum speed.
+ */
+
 public class GetSpeedService extends Service {
 
     private static final String TAG = "SpeedDisplay " + GetSpeedService.class.getSimpleName();
@@ -46,6 +59,7 @@ public class GetSpeedService extends Service {
     private volatile HandlerThread mHandlerThread;
     private ServiceHandler mServiceHandler;
 
+    // class that stores the update rate
     private  UpdateRate mUpdateRate;
 
     public GetSpeedService() {
@@ -125,23 +139,25 @@ public class GetSpeedService extends Service {
                             float speed = location.getSpeed();
                             /* convert speed from metres/sec to km/hour */
                             speed = speed * 3600F / 1000F;
-                            /* save speed for possible broadcasts back to main */
-                            savedSpeed = speed;
 
-                            //Log.d(TAG, "onLocationResult Speed: " + speed);
-
-                            mMaxSpeed = checkMaxSpeed(speed, mMaxSpeed);
-                            /* sends speed and max speed to main activity each time,
-                             * rather than sending flags which say maxSpeed has changed and
-                             * then having code to check the flags and update the maxSpeed.
-                             * Only send to main activity via broadcast if main activity is running */
-                            if (mMainActivityRunning) {
-                                sendToMain(speed, mMaxSpeed);
+                            //check if speed has changed, only process if there has been a change
+                            if (savedSpeed != speed) {
+                                savedSpeed = speed;
+                                //Log.d(TAG, "onLocationResult Speed: " + speed);
+                                //check if previous max speed has been exceeded
+                                mMaxSpeed = checkMaxSpeed(speed, mMaxSpeed);
+                                /* sends speed and max speed to main activity each time,
+                                 * rather than sending flags which say maxSpeed has changed and
+                                 * then having code to check the flags and update the maxSpeed.
+                                 * Only send to main activity via broadcast if main activity running
+                                 */
+                                if (mMainActivityRunning) {
+                                    sendToMain(speed, mMaxSpeed);
+                                }
                             }
                         }
                     }
                 };
-
 
                 /* initially set the update rate to the default value.
                  * Rate has to be in  milliseconds for the location provider.
@@ -201,8 +217,7 @@ public class GetSpeedService extends Service {
     }
 
     /**
-     * set up broadcast to pass the speed, maxSpeed, and flag to say if main activity should
-     * process or ignore maxSpeed
+     * set up broadcast to pass the speed, maxSpeed
      *
      * @param speed    latest speed
      * @param maxSpeed current maximum speed
@@ -298,7 +313,9 @@ public class GetSpeedService extends Service {
          */
         @Override
         public void onReceive(Context context, Intent intent) {
+            //get the default update rate
             long defaultRate = mUpdateRate.getDefaultRunningRateInMilliSecs(context);
+            //get the update rate from the intent
             long rate = intent.getLongExtra(getString(R.string.extra_key_rate_value), defaultRate);
             /* update the location provider */
             setLocationUpdateRate(rate);
@@ -327,9 +344,6 @@ public class GetSpeedService extends Service {
         // Define how to handle any incoming messages here
         @Override
         public void handleMessage(Message message) {
-            // ...
-            // When needed, stop the service with
-            // stopSelf();
-        }
+         }
     }
 } //end of class GetSpeedService

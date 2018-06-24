@@ -14,6 +14,7 @@ import java.util.Locale;
  * <p>
  * conversion between kilometres per hour and miles per hour
  * checking for a new maximum speed
+ * spannable string
  */
 public final class Utilities {
 
@@ -39,8 +40,16 @@ public final class Utilities {
         return String.format(Locale.UK, context.getString(speedFormatResourceId), speed);
     }
 
-    public static SpannableString spanSpeed(String speed) {
+    /**
+     * Changes the text size of the units to half the size of the speed value.
+     * The units text size is set to half of the speed
+     *
+     * @param speed    speed and units to be displayed in a single text size eg "10.0 km/h"
+     * @return         speed and units to be displayed with units in a smaller text size
+     */
 
+    public static SpannableString spanSpeed(String speed) {
+        //find the start of the units
         int start = speed.indexOf(' ');
         int end = speed.length();
         SpannableString ss = new SpannableString(speed);
