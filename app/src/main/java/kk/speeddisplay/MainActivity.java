@@ -48,13 +48,14 @@ public class MainActivity extends AppCompatActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener {
 
     // get a tag for output debugging
-    private final static String TAG = "SpeedDisplay " + MainActivity.class.getSimpleName();
+    private final static String TAG = MainActivity.class.getSimpleName();
 
     // used to start foreground service
     Intent mService;
 
     /* displays current speed from the location provider in the foreground service */
     private TextView mCurrentSpeedTextView;
+
     /* displays maximum speed recorded to date,
      * max speed speed is calculated in the foreground service
      * max speed is saved in the shared preferences by the foreground service
@@ -78,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Log.d(TAG, "onCreate");
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onCreate()");
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -110,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements
      * If permission denied puts out a message and then exits.
      */
     private void checkPermissions() {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "checkPermissions()");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -134,7 +136,8 @@ public class MainActivity extends AppCompatActivity implements
      * (listener unregistered in onDestroy)
      */
     private void setupSharedPreferences() {
-        //Log.d(TAG, " setupSharedPreferences");
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "setupSharedPreferences()");
+
         String rate;
 
         rate = Preferences.getPrefRunningRate(this);
@@ -151,21 +154,26 @@ public class MainActivity extends AppCompatActivity implements
      * Check which preference changed,
      * gets the new value which is returned as a float in seconds,
      * stores it in the appropriate global
-     *
+     * the new rate will be sent to the service by the on resume() method
+     * no need to check for
      * @param sharedPreferences preference object with the change
      * @param keyInSecs         key for preference that changed
      */
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String keyInSecs) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onSharedPreferenceChanged()");
+
         String key;
         String rate;
 
+        //check if running update rate has changed
         key = getString(R.string.pref_key_running_update_rate);
         if (keyInSecs.equals(key)) {
             rate = Preferences.getPrefRunningRate(this);
             mRunningUpdateRate.setRate(rate);
             return;
         }
+        //check if not running update rate has changed
         key = getString(R.string.pref_key_not_running_update_rate);
         if (keyInSecs.equals(key)) {
             rate = Preferences.getPrefNotRunningRate(this);
@@ -175,12 +183,12 @@ public class MainActivity extends AppCompatActivity implements
 
     protected void onStart() {
         super.onStart();
-        //Log.d(TAG, "onStart");
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onStart()");
     }
 
     protected void onResume() {
         super.onResume();
-        //Log.d(TAG, "onResume");
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onResume()");
 
         /* screen now visible, send:
          * running update rate, flag saying to not reset maximum speed, and
@@ -190,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements
 
     protected void onPause() {
         super.onPause();
-        //Log.d(TAG, "onPause");
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onPause()");
 
         /* screen now not visible, send:
          * not running update rate, flag saying to not reset maximum speed, and
@@ -200,11 +208,15 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onDestroy()");
+
         super.onDestroy();
         shutDown();
     }
 
     private void shutDown() {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "shutDown()");
+
         // unregister OnSharedPreferenceChangeListener
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
@@ -215,7 +227,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     * sends via broadcast location provider update rate to the service and
+     * sends via a broadcast to the foreground service, the location provider update rate
      * flag if the maximum speed should be reset and
      * flag if the activity is running
      *
@@ -223,8 +235,8 @@ public class MainActivity extends AppCompatActivity implements
      * @param resetMaxSpeed if true tell service to clear max speed
      */
     private void sendRateToService(long rate, boolean resetMaxSpeed, boolean activityRunning) {
-        // Log.d(TAG, "sendRateToService rate: " + rate + " resetMaxSpeed: " + resetMaxSpeed +
-        //         " activityRunning: " + activityRunning);
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "sendRateToService()");
+
 
         /* set up broadcast to pass the running update rate to the service*/
         Intent updateRate = new Intent();
@@ -244,6 +256,8 @@ public class MainActivity extends AppCompatActivity implements
      */
 
     private void getMyLocation() {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getMyLocation()");
+
         mService = new Intent(this, GetSpeedService.class);
         startService(mService);
     }
@@ -252,6 +266,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onRequestPermissionsResult()");
+
         switch (requestCode) {
             case 10:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
@@ -264,6 +280,8 @@ public class MainActivity extends AppCompatActivity implements
      **/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onCreateOptionsMenu()");
+
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
         MenuInflater inflater = getMenuInflater();
         /* Use the inflater's inflate method to inflate our visualizer_menu layout to this menu */
@@ -274,6 +292,8 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onOptionsItemSelected()");
+
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -281,7 +301,10 @@ public class MainActivity extends AppCompatActivity implements
 
         /* check if request to reset maximum speed */
         if (id == R.id.max_reset) {
-            /* sends message to service to clear max speed */
+            /* sends message to service to clear max speed, if user has just cleared the max speed
+             * assume activity must be running, so send running rate, and send a flag to say
+             * it is running
+             */
             sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true, true);
             return true;
         }
@@ -307,7 +330,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     public class MySpeedBroadcastReceiver extends BroadcastReceiver {
-        private final String TAG = "SpeedDisplay " + MySpeedBroadcastReceiver.class.getSimpleName();
+        private final String TAG = MySpeedBroadcastReceiver.class.getSimpleName();
 
         /**
          * Retrieves both speed and maximum speed and displays them both
@@ -318,15 +341,16 @@ public class MainActivity extends AppCompatActivity implements
          */
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onReceive()");
+
             // get the speed, format the speed, make spannable and display it
             Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
             String formattedSpeed = Utilities.formatSpeed(context, speed);
             SpannableString spannedSpeed = Utilities.spanSpeed(formattedSpeed);
             mCurrentSpeedTextView.setText(spannedSpeed);
 
-            /* get the max speed, format it  and display it */
+            /* get the max speed, format it and display it */
             Float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
-
             String formattedMAxSpeed = Utilities.formatSpeed(context, maxSpeed);
             mMaxSpeedTextView.setText(formattedMAxSpeed);
         }

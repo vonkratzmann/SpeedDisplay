@@ -12,8 +12,11 @@ package kk.speeddisplay;
  */
 
 import android.content.Context;
+import android.util.Log;
 
 public class UpdateRate {
+    private final static String TAG = UpdateRate.class.getSimpleName();
+
     private float rate;
 
     /**
@@ -22,16 +25,18 @@ public class UpdateRate {
      * @return rate in milliseconds
      */
     protected long getRateInMilliSecs() {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getRateInMilliSecs()");
+
         return (long) (rate * 1000F);
     }
 
     /**
      * Returns the default running rate as a long in milliseconds
-     * the default rate used is always the activity running rate
      *
      * @return default rate in milliseconds
      */
     protected long getDefaultRunningRateInMilliSecs(Context context) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getDefaultRunningRateInMilliSecs()");
 
         String rate = context.getString(R.string.pref_default_running_rate);
         Float rateFloat = Float.valueOf(rate);
@@ -44,9 +49,11 @@ public class UpdateRate {
     /**
      * Setter which takes a string and then saves the rate as a float
      *
-     * @param rate  new rate
+     * @param rate new rate
      */
     protected void setRate(String rate) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "setRate()");
+
         this.rate = Float.parseFloat(rate);
     }
 

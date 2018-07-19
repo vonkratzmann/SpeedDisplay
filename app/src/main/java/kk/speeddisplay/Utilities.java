@@ -18,8 +18,7 @@ import java.util.Locale;
  * spannable string
  */
 public final class Utilities {
-
-    private final static String TAG = "SpeedDisplay" + Utilities.class.getSimpleName();
+    private final static String TAG = Utilities.class.getSimpleName();
 
     /**
      * Speed is stored km/hour in app. Depending on the user's preference,
@@ -31,6 +30,8 @@ public final class Utilities {
      * @return Formatted speed
      */
     public static String formatSpeed(Context context, float speed) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "formatSpeed()");
+
         //get the default format to display speed
         int speedFormatResourceId = R.string.speed_format_kph;
 
@@ -50,6 +51,8 @@ public final class Utilities {
      */
 
     public static SpannableString spanSpeed(String speed) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "spanSpeed()");
+
         //find the start of the units
         int start = speed.indexOf(' ');
         int end = speed.length();
@@ -66,6 +69,8 @@ public final class Utilities {
      * @return speed in miles/hour (mph)
      */
     private static float kphToMph(float speedInKph) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "kphToMph()");
+
         return speedInKph * .6214F;
     }
 
@@ -78,6 +83,8 @@ public final class Utilities {
      * @return true if strings represents valid float number
      */
     public static boolean checkFloatIsPostive(String textNumber) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "checkFloatIsPostive()");
+
         try {
             Float number = Float.valueOf(textNumber);
             if (number <= 0 || number >= Long.MAX_VALUE) {
@@ -99,6 +106,8 @@ public final class Utilities {
      * @return float    always return the maximum speed
      */
     public float checkMaxSpeed(Context context, float speed, float maxSpeed) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "checkMaxSpeed()");
+
         if (speed > maxSpeed) {
             /* we have a new maximum speed */
             //Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
@@ -116,7 +125,8 @@ public final class Utilities {
      * @param maxSpeed maximum speed to be saved
      */
     public void saveMaxSpeed(Context context, float maxSpeed) {
-        //Log.d(TAG, "saveMaxSpeed maxSpeed: " + maxSpeed);
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "saveMaxSpeed()");
+
         /* save maximum speed to shared preferences */
         SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor mEditor = mSharedPref.edit();

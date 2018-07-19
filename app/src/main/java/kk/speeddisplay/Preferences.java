@@ -8,16 +8,18 @@ import android.util.Log;
 public class Preferences {
 
     /* get a tag for output debugging */
-    private final static String TAG = "SpeedDisplay " + Preferences.class.getSimpleName();
+    private final static String TAG = Preferences.class.getSimpleName();
 
     /**
      * Gets rate at which location provider provides updates when the activity is running
-     * gets the new rate fom the share preferences
+     * gets the new rate from the share preferences
      *
      * @param context context used to get the shared preferences
      * @return location update rate for when activity is running in seconds
      */
     protected static String getPrefRunningRate(Context context) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getPrefRunningRate()");
+
         SharedPreferences prefs = android.preference.PreferenceManager.
                 getDefaultSharedPreferences(context);
         // get rate
@@ -37,6 +39,8 @@ public class Preferences {
      * @return location update rate for when activity is not running in seconds
      */
     protected static String getPrefNotRunningRate(Context context) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getPrefNotRunningRate()");
+
         SharedPreferences prefs = android.preference.PreferenceManager.
                 getDefaultSharedPreferences(context);
         // get rate
@@ -55,6 +59,8 @@ public class Preferences {
      * @return true if metric display should be used
      */
     protected static boolean isMetric(Context context) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "isMetric()");
+
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String keyForUnits = context.getString(R.string.pref_key_units);
         String defaultUnits = context.getString(R.string.pref_value_units_metric);
@@ -71,6 +77,8 @@ public class Preferences {
      * @return maximum speed
      */
     protected static float getPrefMaxSpeed(Context context) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getPrefMaxSpeed()");
+
         SharedPreferences prefs = android.preference.PreferenceManager.
                 getDefaultSharedPreferences(context);
         String key = context.getString(R.string.pref_key_saved_max_speed);
@@ -78,5 +86,4 @@ public class Preferences {
         //Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(maxSpeed));
         return maxSpeed;
     }
-
 }

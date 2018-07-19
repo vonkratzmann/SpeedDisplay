@@ -18,10 +18,11 @@ import android.widget.Toast;
 public class SettingsFragment extends PreferenceFragmentCompat implements
         SharedPreferences.OnSharedPreferenceChangeListener, Preference.OnPreferenceChangeListener {
 
-    public final static String TAG = "SpeedDisplay" + SettingsFragment.class.getSimpleName();
+    public final static String TAG = SettingsFragment.class.getSimpleName();
 
     @Override
     public void onCreatePreferences(Bundle bundle, String rootKey) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onCreatePreferences()");
 
         // Load the preferences from an XML resource
         addPreferencesFromResource(R.xml.pref_speed);
@@ -56,6 +57,8 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
      * @param value      The value that the preference was updated to
      */
     private void setPreferenceSummary(Preference preference, String value) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "setPreferenceSummary()");
+
         if (preference instanceof ListPreference) {
             // For list preferences, figure out the label of the selected value
             ListPreference listPreference = (ListPreference) preference;
@@ -72,6 +75,8 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onSharedPreferenceChanged()");
+
         /* Figure out which preference has changed */
         Preference preference = findPreference(key);
         if (null != preference) {
@@ -92,6 +97,8 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
      */
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onPreferenceChange()");
+
         Toast error = Toast.makeText(getContext(), "Invalid number format", Toast.LENGTH_SHORT);
 
         String runningRateKey = getString(R.string.pref_key_running_update_rate);
@@ -113,6 +120,8 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onCreate()");
+
         getPreferenceScreen().getSharedPreferences()
                 .registerOnSharedPreferenceChangeListener(this);
     }
@@ -120,9 +129,9 @@ public class SettingsFragment extends PreferenceFragmentCompat implements
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onDestroyView()");
+
         getPreferenceScreen().getSharedPreferences()
                 .unregisterOnSharedPreferenceChangeListener(this);
     }
-
-
 }

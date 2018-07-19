@@ -19,6 +19,8 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onCreate()");
+
         setContentView(R.layout.activity_settings);
         ActionBar actionBar = this.getSupportActionBar();
 
@@ -31,6 +33,8 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onOptionsItemSelected()");
+
         int id = item.getItemId();
         // When the home button is pressed, take the user back to the VisualizerActivity
         if (id == android.R.id.home) {
@@ -38,16 +42,5 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-//    @Override
-//    public boolean onPreferenceClick(Preference preference)
-//    {
-//        Log.d(TAG, "onPreferenceClick");
-//        EditTextPreference editPref = (EditTextPreference) preference;
-//        editPref.getEditText().setSelection(editPref.getText().length());
-//        return true;
-//    }
-
-
 }
 
