@@ -1,3 +1,23 @@
 <resources>
     <dimen name="fab_margin">16dp</dimen>
+    <dimen name="large_text_size">64dp</dimen>
+    <dimen name="medium_text_size">24dp</dimen>
+    <dimen name="small_text_size">12dp</dimen>
+
+    <dimen name="large_margin">16dp</dimen>
+    <dimen name="medium_margin">16dp</dimen>
+    <dimen name="small_margin">4dp</dimen>
+
+    <dimen name="large_padding">8dp</dimen>
+    <dimen name="medium_padding">8dp</dimen>
+    <dimen name="small_padding">1dp</dimen>
+
+    <dimen name="large_margin_bottom">64dp</dimen>
+    <dimen name="medium_margin_bottom">32dp</dimen>
+    <dimen name="small_margin_bottom">16dp</dimen>
+
+    <!-- rounded border text views -->
+    <dimen name="medium_rounded_border_width">4dp</dimen>
+    <dimen name="medium_rounded_border_radius">360dp</dimen>
+
 </resources>

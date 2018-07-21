@@ -1,9 +1,91 @@
 <resources>
-    <string name="app_name">Speed</string>
-    <string name="max_reset">Clear Maximum</string>
+    <!--Used in Action Bar, and in AndroidManifest to tell the device the name of this app.-->
+    <string name="main_activity_title">Speed</string>
+
+    <!-- menu titles -->
+    <string name="max_reset_menu_item">Clear Maximum</string>
+
+    <!-- menu items -->
     <string name="show_speed">Show Speed</string>
-    <string name="speed">Speed</string>
-    <string name="maxspeedtitle">Maximum Speed</string>
-    <string name="savedMaxSpeed">savedMaxSpeed</string>
+    <string name="action_settings">Settings</string>
     <string name="quit">Quit</string>
+
+    <!-- text/edit views default values and text -->
+    <string name="speed">0.0 km/h</string>
+        <string name="max_speed_title">Maximum Speed</string>
+
+    <!-- display format for speed and maximum speed with one decimal point -->
+    <string name="speed_format_kph">%1$.1f km/h</string>
+    <string name="speed_format_mph">%1$.1f mph</string>
+
+    <!-- Settings activity strings -->
+    <string name="settings_activity_title">Settings</string>
+
+    <!-- Preference keys  -->
+    <string name="pref_key_saved_max_speed" translatable="false">savedMaxSpeed</string>
+    <string name="pref_key_running_update_rate" translatable="false">AppsRunning</string>
+    <string name="pref_key_not_running_update_rate" translatable="false">AppsNotRunning</string>
+    <string name="pref_key_units" translatable="false">Units</string>
+
+    <!--Preference title, dialog, summaries -->
+    <!-- EditText Preference Activity running -->
+    <string name="pref_title_running_update_rate">Update Rate If Speed App Visible</string>
+    <string name="pref_summary_running_update_rate">Rate at which the speed is updated when the application is displayed.</string>
+    <string name="pref_dialog_title_running_rate">Dialog Running Title</string>
+    <string name="pref_default_running_rate">"2"</string>
+
+    <!-- EditText Preference Activity not running -->
+    <string name="pref_title_not_running_update_rate">Update Rate If Speed App Not Visible</string>
+    <string name="pref_summary_not_running_update_rate">Rate at which the speed is updated when the application is not displayed.</string>
+    <string name="pref_dialog_title_not_running_rate">Dialog Not Running Title</string>
+    <string name="pref_default_not_running_rate">"30"</string>
+
+    <string name="pref_activity_update_rate_dialog">Enter the time in seconds"</string>
+
+    <!-- ListPreference Units -->
+    <string name="pref_title_units_">Speed units</string> <!-- [CHAR LIMIT=30] -->
+    <string name="pref_title_units_metric">Metric</string> <!--[CHAR LIMIT=25] -->
+    <string name="pref_title_units_imperial">Imperial</string> <!--[CHAR LIMIT=25] -->
+    <string name="pref_value_units_metric" translatable="false">metric</string>
+    <string name="pref_value_units_imperial" translatable="false">imperial</string>
+
+    <!-- SharedPreference storage filename  -->
+    <string name="shared_pref_storage_file">kk.speeddisplay.SHARED.PREF</string>
+
+
+    <!-- display formatting -->
+    <string name="units_and_number_of_decimals">%1$.1f km/hr</string>
+
+    <!-- notification messages -->
+    <string name="notification_title">Speed"</string>
+    <string name="notification_message">Is running"</string>
+    <string name="notification_ticker_text">" "</string>
+
+    <!-- Color options -->
+    <string name="pref_color_red_value" translatable="false">red</string>
+    <string name="pref_color_blue_value" translatable="false">blue</string>
+    <string name="pref_color_green_value" translatable="false">green</string>
+
+    <!-- Intents -->
+    <!-- Intent actions -->
+    <string name="ACTION_SendSpeedToMain" translatable="false">
+        "com.example.android.kk.GetSpeedService.SPEEDTOMAIN"</string>
+    <string name="ACTION_SendMaxToMain" translatable="false">
+        "com.example.android.kk.GetSpeedService.MAXTOMAIN"</string>
+    <string name="ACTION_SendRateToService" translatable="false">
+     "com.example.android.kk.GetSpeedService.RATETOSERVICE"</string>
+
+    <!-- Extra key for intents -->
+    <!--used to get the rate values from the intent -->
+    <string name="extra_key_rate_value" translatable="false">"rate_value"</string>
+    <string name="extra_key_speed" translatable="false">"current_speed"</string>
+    <string name="extra_key_main_running" translatable="false">"main_running"</string>
+
+    <!-- error strings -->
+    <string name="error">Error</string>
+    <string name="permission_denied">Permission Denied</string>
+    <string name="exiting">Exiting application</string>
+    <string name="title_activity_settings2">Settings</string>
+    <string name="invalid_number_format">Please select a number greater than zero</string>
+
 </resources>
