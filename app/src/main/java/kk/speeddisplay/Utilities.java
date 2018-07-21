@@ -46,8 +46,8 @@ public final class Utilities {
      * Changes the text size of the units to half the size of the speed value.
      * The units text size is set to half of the speed
      *
-     * @param speed    speed and units to be displayed in a single text size eg "10.0 km/h"
-     * @return         speed and units to be displayed with units in a smaller text size
+     * @param speed speed and units to be displayed in a single text size eg "10.0 km/h"
+     * @return speed and units to be displayed with units in a smaller text size
      */
 
     public static SpannableString spanSpeed(String speed) {
@@ -94,42 +94,5 @@ public final class Utilities {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Checks if speed above previously maximum speed
-     * if so save the new maximum speed in the preferences
-     * always return the maximum speed, either the old maximum or the new maximum
-     *
-     * @param speed    latest speed from the location provider
-     * @param maxSpeed current maximum speed
-     * @return float    always return the maximum speed
-     */
-    public float checkMaxSpeed(Context context, float speed, float maxSpeed) {
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "checkMaxSpeed()");
-
-        if (speed > maxSpeed) {
-            /* we have a new maximum speed */
-            //Log.d(TAG, "checkMaxSpeed new maximum: " + speed);
-            /* save new maximum speed to shared preferences */
-            saveMaxSpeed(context, speed);
-            // return the new maximum speed
-            return speed;
-        }
-        return maxSpeed;
-    }
-
-    /**
-     * save maximum speed to shared preferences
-     *
-     * @param maxSpeed maximum speed to be saved
-     */
-    public void saveMaxSpeed(Context context, float maxSpeed) {
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "saveMaxSpeed()");
-
-        /* save maximum speed to shared preferences */
-        SharedPreferences mSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor mEditor = mSharedPref.edit();
-        mEditor.clear().putFloat(context.getString(R.string.pref_key_saved_max_speed), maxSpeed).apply();
     }
 }

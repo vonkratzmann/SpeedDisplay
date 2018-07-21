@@ -20,15 +20,15 @@ public class Preferences {
     protected static String getPrefRunningRate(Context context) {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getPrefRunningRate()");
 
-        SharedPreferences prefs = android.preference.PreferenceManager.
+        SharedPreferences prefs = PreferenceManager.
                 getDefaultSharedPreferences(context);
+
+        // SharedPreferences sharedPref = .getPreferences(Context.MODE_PRIVATE);
+
         // get rate
         String key = context.getString(R.string.pref_key_running_update_rate);
         String defaultRate = context.getString(R.string.pref_default_running_rate);
-        String rate = prefs.getString(key, defaultRate);
-
-        //Log.d(TAG, "updatePrefRunningRate rate: " + rate);
-        return rate;
+        return prefs.getString(key, defaultRate);
     }
 
     /**
@@ -41,15 +41,12 @@ public class Preferences {
     protected static String getPrefNotRunningRate(Context context) {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getPrefNotRunningRate()");
 
-        SharedPreferences prefs = android.preference.PreferenceManager.
+        SharedPreferences prefs = PreferenceManager.
                 getDefaultSharedPreferences(context);
         // get rate
         String key = context.getString(R.string.pref_key_not_running_update_rate);
         String defaultRate = context.getString(R.string.pref_default_not_running_rate);
-        String rate = prefs.getString(key, defaultRate);
-
-        //Log.d(TAG, "getPrefNotRunningRate rate: " + rate);
-        return rate;
+        return prefs.getString(key, defaultRate);
     }
 
     /**
@@ -79,11 +76,28 @@ public class Preferences {
     protected static float getPrefMaxSpeed(Context context) {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "getPrefMaxSpeed()");
 
-        SharedPreferences prefs = android.preference.PreferenceManager.
-                getDefaultSharedPreferences(context);
+        //use separate file as using shared preferences and settings preference interfere
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_storage_file), Context.MODE_PRIVATE);
+
         String key = context.getString(R.string.pref_key_saved_max_speed);
-        float maxSpeed = prefs.getFloat(key, 0.0F);
-        //Log.d(TAG, "updatePrefMaxSpeed mMaxSpeed: " + Float.toString(maxSpeed));
-        return maxSpeed;
+       return sharedPref.getFloat(key, 0.0F);
+    }
+
+    /**
+     * save maximum speed to shared preferences
+     *
+     * @param maxSpeed maximum speed to be saved
+     */
+    public static void saveMaxSpeed(Context context, float maxSpeed) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "saveMaxSpeed()");
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                context.getString(R.string.shared_pref_storage_file), Context.MODE_PRIVATE);
+
+        /* save maximum speed to shared preferences */
+        SharedPreferences.Editor mEditor = sharedPref.edit();
+        mEditor.clear().putFloat(context.getString(R.string.pref_key_saved_max_speed),
+                maxSpeed).apply();
     }
 }

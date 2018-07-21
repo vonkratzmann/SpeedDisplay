@@ -21,14 +21,13 @@
     <!-- Settings activity strings -->
     <string name="settings_activity_title">Settings</string>
 
-    <!-- Shared Preferences -->
-    <!-- Shared preference keys  -->
+    <!-- Preference keys  -->
     <string name="pref_key_saved_max_speed" translatable="false">savedMaxSpeed</string>
     <string name="pref_key_running_update_rate" translatable="false">AppsRunning</string>
     <string name="pref_key_not_running_update_rate" translatable="false">AppsNotRunning</string>
     <string name="pref_key_units" translatable="false">Units</string>
 
-    <!--Shared preference title, dialog, summaries -->
+    <!--Preference title, dialog, summaries -->
     <!-- EditText Preference Activity running -->
     <string name="pref_title_running_update_rate">Update Rate If Speed App Visible</string>
     <string name="pref_summary_running_update_rate">Rate at which the speed is updated when the application is displayed.</string>
@@ -49,6 +48,10 @@
     <string name="pref_title_units_imperial">Imperial</string> <!--[CHAR LIMIT=25] -->
     <string name="pref_value_units_metric" translatable="false">metric</string>
     <string name="pref_value_units_imperial" translatable="false">imperial</string>
+
+    <!-- SharedPreference storage filename  -->
+    <string name="shared_pref_storage_file">kk.speeddisplay.SHARED.PREF</string>
+
 
     <!-- display formatting -->
     <string name="units_and_number_of_decimals">%1$.1f km/hr</string>

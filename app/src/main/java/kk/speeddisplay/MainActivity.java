@@ -46,7 +46,7 @@ import java.util.Locale;
  */
 public class MainActivity extends AppCompatActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener {
-
+    //region Fields
     // get a tag for output debugging
     private final static String TAG = MainActivity.class.getSimpleName();
 
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements
      * max speed is saved in the shared preferences by the foreground service
      */
     private TextView mMaxSpeedTextView;
+    private float mMaxSpeed;
 
     /* gets speed updates from foreground service */
     private MySpeedBroadcastReceiver mSpeedBroadcastReceiver;
@@ -74,7 +75,9 @@ public class MainActivity extends AppCompatActivity implements
      */
     private UpdateRate mRunningUpdateRate = new UpdateRate();
     private UpdateRate mNotRunningUpdateRate = new UpdateRate();
+    //endregion
 
+    //region Lifecycle
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,7 +104,51 @@ public class MainActivity extends AppCompatActivity implements
         //check permissions and if ok start foreground service
         checkPermissions();
 
+        //display maximum speed obtained from saved value in preferences
+        mMaxSpeed = Preferences.getPrefMaxSpeed(getApplicationContext());
+        String formattedMaxSpeed = Utilities.formatSpeed(this, mMaxSpeed);
+        mMaxSpeedTextView.setText(formattedMaxSpeed);
     }
+
+
+    protected void onStart() {
+        super.onStart();
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onStart()");
+    }
+
+
+    protected void onResume() {
+        super.onResume();
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onResume()");
+
+        /* screen now visible, send:
+         * running update rate, flag saying to not reset maximum speed, and
+         * flag saying activity is running */
+        sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), false, true);
+    }
+
+
+    protected void onPause() {
+        super.onPause();
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onPause()");
+
+        /* screen now not visible, send:
+         * not running update rate, flag saying to not reset maximum speed, and
+         * flag saying activity is not running */
+        sendRateToService(mNotRunningUpdateRate.getRateInMilliSecs(), false, false);
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onDestroy()");
+
+        super.onDestroy();
+        shutDown();
+    }
+    //endregion
+
+    //region Methods
 
     /**
      * Checks have permission to access location resources.
@@ -130,6 +177,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+
     /**
      * Retrieves from shared preferences update rates for when activity is running and not running.
      * Registers listener for any changes to shared preferences,
@@ -140,91 +188,29 @@ public class MainActivity extends AppCompatActivity implements
 
         String rate;
 
-        rate = Preferences.getPrefRunningRate(this);
+        rate = Preferences.getPrefRunningRate(getApplicationContext());
         mRunningUpdateRate.setRate(rate);
-        rate = Preferences.getPrefNotRunningRate(this);
+        rate = Preferences.getPrefNotRunningRate(getApplicationContext());
         mNotRunningUpdateRate.setRate(rate);
 
         // register listener
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         pref.registerOnSharedPreferenceChangeListener(this);
     }
 
-    /**
-     * Check which preference changed,
-     * gets the new value which is returned as a float in seconds,
-     * stores it in the appropriate global
-     * the new rate will be sent to the service by the on resume() method
-     * no need to check for
-     * @param sharedPreferences preference object with the change
-     * @param keyInSecs         key for preference that changed
-     */
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String keyInSecs) {
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onSharedPreferenceChanged()");
-
-        String key;
-        String rate;
-
-        //check if running update rate has changed
-        key = getString(R.string.pref_key_running_update_rate);
-        if (keyInSecs.equals(key)) {
-            rate = Preferences.getPrefRunningRate(this);
-            mRunningUpdateRate.setRate(rate);
-            return;
-        }
-        //check if not running update rate has changed
-        key = getString(R.string.pref_key_not_running_update_rate);
-        if (keyInSecs.equals(key)) {
-            rate = Preferences.getPrefNotRunningRate(this);
-            mNotRunningUpdateRate.setRate(rate);
-        }
-    }
-
-    protected void onStart() {
-        super.onStart();
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onStart()");
-    }
-
-    protected void onResume() {
-        super.onResume();
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onResume()");
-
-        /* screen now visible, send:
-         * running update rate, flag saying to not reset maximum speed, and
-         * flag saying activity is running */
-        sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), false, true);
-    }
-
-    protected void onPause() {
-        super.onPause();
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onPause()");
-
-        /* screen now not visible, send:
-         * not running update rate, flag saying to not reset maximum speed, and
-         * flag saying activity is not running */
-        sendRateToService(mNotRunningUpdateRate.getRateInMilliSecs(), false, false);
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onDestroy()");
-
-        super.onDestroy();
-        shutDown();
-    }
 
     private void shutDown() {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "shutDown()");
 
         // unregister OnSharedPreferenceChangeListener
-        PreferenceManager.getDefaultSharedPreferences(this)
+        PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                 .unregisterOnSharedPreferenceChangeListener(this);
 
         // unregister broadcast receiver for speed updates
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mSpeedBroadcastReceiver);
     }
+
 
     /**
      * sends via a broadcast to the foreground service, the location provider update rate
@@ -247,6 +233,7 @@ public class MainActivity extends AppCompatActivity implements
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .sendBroadcast(updateRate);
     }
+
 
     /**
      * Starts foreground service which
@@ -275,6 +262,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+
     /**
      * Methods for setting up the menu
      **/
@@ -289,6 +277,50 @@ public class MainActivity extends AppCompatActivity implements
         /* Return true so that the visualizer_menu is displayed in the Toolbar */
         return true;
     }
+    //endregion
+
+    //region Listeners
+
+    /**
+     * Check which preference changed,
+     * gets the new value which is returned as a float in seconds,
+     * stores it in the appropriate global
+     * the new rate will be sent to the service by the on resume() method
+     * no need to check for
+     *
+     * @param sharedPreferences preference object with the change
+     * @param keyInPrefs        key for preference that changed
+     */
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String keyInPrefs) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onSharedPreferenceChanged()");
+
+        String key;
+        String rate;
+
+        //check if running update rate has changed
+        key = getString(R.string.pref_key_running_update_rate);
+        if (keyInPrefs.equals(key)) {
+            rate = Preferences.getPrefRunningRate(getApplicationContext());
+            mRunningUpdateRate.setRate(rate);
+            return;
+        }
+        //check if not running update rate has changed
+        key = getString(R.string.pref_key_not_running_update_rate);
+        if (keyInPrefs.equals(key)) {
+            rate = Preferences.getPrefNotRunningRate(getApplicationContext());
+            mNotRunningUpdateRate.setRate(rate);
+        }
+
+        //check if maximum speed has changed
+        key = getString(R.string.pref_key_saved_max_speed);
+        if (keyInPrefs.equals(key)) {
+            float maxSpeed = Preferences.getPrefMaxSpeed(getApplicationContext());
+            String formattedMAxSpeed = Utilities.formatSpeed(getApplicationContext(), maxSpeed);
+            mMaxSpeedTextView.setText(formattedMAxSpeed);
+        }
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -303,9 +335,13 @@ public class MainActivity extends AppCompatActivity implements
         if (id == R.id.max_reset) {
             /* sends message to service to clear max speed, if user has just cleared the max speed
              * assume activity must be running, so send running rate, and send a flag to say
-             * it is running
+             * it is running, saves maximum speed in preferences, display new max speed.
              */
             sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true, true);
+            mMaxSpeed = 0.0F;
+            Preferences.saveMaxSpeed( getApplicationContext(), mMaxSpeed);
+            String formattedMaxSpeed = Utilities.formatSpeed(this, mMaxSpeed);
+            mMaxSpeedTextView.setText(formattedMaxSpeed);
             return true;
         }
         /* check if request to navigate to the settings screen */
@@ -328,12 +364,14 @@ public class MainActivity extends AppCompatActivity implements
         }
         return super.onOptionsItemSelected(item);
     }
+    //endregion
 
+    //region InnerClasses
     public class MySpeedBroadcastReceiver extends BroadcastReceiver {
         private final String TAG = MySpeedBroadcastReceiver.class.getSimpleName();
 
         /**
-         * Retrieves both speed and maximum speed and displays them both
+         * Retrieves speed and displays speed
          * ensures the correct units are displayed with the correct format
          *
          * @param context context
@@ -349,10 +387,15 @@ public class MainActivity extends AppCompatActivity implements
             SpannableString spannedSpeed = Utilities.spanSpeed(formattedSpeed);
             mCurrentSpeedTextView.setText(spannedSpeed);
 
-            /* get the max speed, format it and display it */
-            Float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
-            String formattedMAxSpeed = Utilities.formatSpeed(context, maxSpeed);
-            mMaxSpeedTextView.setText(formattedMAxSpeed);
+            //check if previous max speed has been exceeded
+            if (speed > mMaxSpeed) {
+                mMaxSpeed = speed;
+                //save new maximum speed to shared preferences, format and display it
+                Preferences.saveMaxSpeed(getApplicationContext(), mMaxSpeed);
+                String formattedMaxSpeed = Utilities.formatSpeed(context, mMaxSpeed);
+                mMaxSpeedTextView.setText(formattedMaxSpeed);
+            }
         }
+        //endregion
     }
 }
