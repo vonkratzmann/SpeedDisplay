@@ -39,9 +39,8 @@ import java.util.Locale;
  * The update intervals are saved in the shared preferences.
  * If the update intervals are changed by the user or if the activity state changes,
  * the appropriate rates are sent to the service via a broadcast.
- * Within the broadcast for the update intervals , there are two flags:
- * 1. Specifies if the maximum speed should be reset because the user has reset the maximum speed;
- * 2. Advises if the activity is running or not running, so speed updates are only sent from the
+ * Within the broadcast for the update intervals , there is one flag:
+ * 1. Advises if the activity is running or not running, so speed updates are only sent from the
  * service when the main activity is running.
  */
 public class MainActivity extends AppCompatActivity implements
@@ -56,10 +55,7 @@ public class MainActivity extends AppCompatActivity implements
     /* displays current speed from the location provider in the foreground service */
     private TextView mCurrentSpeedTextView;
 
-    /* displays maximum speed recorded to date,
-     * max speed speed is calculated in the foreground service
-     * max speed is saved in the shared preferences by the foreground service
-     */
+    /* displays maximum speed recorded to date */
     private TextView mMaxSpeedTextView;
     private float mMaxSpeed;
 
@@ -122,9 +118,8 @@ public class MainActivity extends AppCompatActivity implements
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onResume()");
 
         /* screen now visible, send:
-         * running update rate, flag saying to not reset maximum speed, and
          * flag saying activity is running */
-        sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), false, true);
+        sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true);
     }
 
 
@@ -133,9 +128,8 @@ public class MainActivity extends AppCompatActivity implements
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onPause()");
 
         /* screen now not visible, send:
-         * not running update rate, flag saying to not reset maximum speed, and
          * flag saying activity is not running */
-        sendRateToService(mNotRunningUpdateRate.getRateInMilliSecs(), false, false);
+        sendRateToService(mNotRunningUpdateRate.getRateInMilliSecs(), false);
     }
 
 
@@ -214,13 +208,11 @@ public class MainActivity extends AppCompatActivity implements
 
     /**
      * sends via a broadcast to the foreground service, the location provider update rate
-     * flag if the maximum speed should be reset and
      * flag if the activity is running
      *
      * @param rate          update rate to be sent to the location provider
-     * @param resetMaxSpeed if true tell service to clear max speed
      */
-    private void sendRateToService(long rate, boolean resetMaxSpeed, boolean activityRunning) {
+    private void sendRateToService(long rate, boolean activityRunning) {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "sendRateToService()");
 
 
@@ -228,7 +220,6 @@ public class MainActivity extends AppCompatActivity implements
         Intent updateRate = new Intent();
         updateRate.setAction(getString(R.string.ACTION_SendRateToService));
         updateRate.putExtra(getString(R.string.extra_key_rate_value), rate);
-        updateRate.putExtra(getString(R.string.extra_key_reset_max_speed), resetMaxSpeed);
         updateRate.putExtra(getString(R.string.extra_key_main_running), activityRunning);
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .sendBroadcast(updateRate);
@@ -286,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements
      * gets the new value which is returned as a float in seconds,
      * stores it in the appropriate global
      * the new rate will be sent to the service by the on resume() method
-     * no need to check for
      *
      * @param sharedPreferences preference object with the change
      * @param keyInPrefs        key for preference that changed
@@ -333,11 +323,11 @@ public class MainActivity extends AppCompatActivity implements
 
         /* check if request to reset maximum speed */
         if (id == R.id.max_reset) {
-            /* sends message to service to clear max speed, if user has just cleared the max speed
+            /* if user has just cleared the max speed
              * assume activity must be running, so send running rate, and send a flag to say
              * it is running, saves maximum speed in preferences, display new max speed.
              */
-            sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true, true);
+            sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true);
             mMaxSpeed = 0.0F;
             Preferences.saveMaxSpeed( getApplicationContext(), mMaxSpeed);
             String formattedMaxSpeed = Utilities.formatSpeed(this, mMaxSpeed);

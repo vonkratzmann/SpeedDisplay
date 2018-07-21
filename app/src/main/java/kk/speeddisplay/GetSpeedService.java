@@ -35,9 +35,8 @@ import com.google.android.gms.location.LocationSettingsRequest;
  * Sends current speed via a broadcast to the main activity.
  * If the main activity is not visible, the current speed is not sent to the main activity.
  * Sets up a broadcast receiver to receive the update rate at which the the location provider
- * should provide location updates. The broadcast receiver also process two flags:
+ * should provide location updates. The broadcast receiver also process one flag:
  *  1. if the main activity is visible or not visible,
- *  2. if we need to reset the maximum speed because the user has reset the maximum speed.
  */
 
 public class GetSpeedService extends Service {
@@ -48,7 +47,6 @@ public class GetSpeedService extends Service {
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
 
-    private float mMaxSpeed = 0.0F;
     private float savedSpeed;
 
     private boolean mMainActivityRunning;
@@ -98,7 +96,6 @@ public class GetSpeedService extends Service {
      * Builds a notification intent and,
      * runs the service in the foreground,
      * request location updates form Fused location client,
-     * gets the maximum speed saved in the preferences
      *
      * @param intent  called by intent
      * @param flags   flags from intent
@@ -115,9 +112,6 @@ public class GetSpeedService extends Service {
 
                 //send notification to the main activity and run as a foreground service
                 sendNotification();
-
-                //get the maximum speed saved in the preferences
-                mMaxSpeed = Preferences.getPrefMaxSpeed(getApplicationContext());
 
                 //send speed to main activity so it is displayed on startup
                 sendToMain(0.0F);
@@ -304,7 +298,6 @@ public class GetSpeedService extends Service {
 
         /**
          * gets the update rate from the intent and updates the location provider
-         * checks if we need to reset the maximum speed, if yes, zero maximum speed,
          * save it in the preferences
          * updates flag indicating if main activity is running or not running
          *
@@ -321,13 +314,6 @@ public class GetSpeedService extends Service {
             long rate = intent.getLongExtra(getString(R.string.extra_key_rate_value), defaultRate);
             /* update the location provider */
             setLocationUpdateRate(rate);
-
-            /* check if we need to reset the maximum speed */
-            boolean resetMaxSpeed = intent.getBooleanExtra(getString(R.string.extra_key_reset_max_speed), false);
-            if (resetMaxSpeed) {
-                mMaxSpeed = 0.0F;
-            }
-
             /* update status of mMainActivityRunning */
             mMainActivityRunning = intent.getBooleanExtra(getString(R.string.extra_key_main_running), false);
         }
