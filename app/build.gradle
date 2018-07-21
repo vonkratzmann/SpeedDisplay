@@ -3,10 +3,10 @@ apply plugin: 'com.android.application'
 android {
     signingConfigs {
         Build2018_06_18 {
-            keyAlias 'speeddisplay'
-            keyPassword '99oybw99_sd'
-            storeFile file('E:/Documents/Google Drive/Kirk/AndroidStudioProjects/android.jks')
-            storePassword '99oybw99_AS'
+            keyAlias 'key0'
+            keyPassword '00oyaw00_SpeedDisplay'
+            storeFile file('E:/Documents/Kirk/AndroidStudioProjects/SpeedDisplay/keystore.jks')
+            storePassword '00oyaw00_SpeedDisplay'
         }
     }
     compileSdkVersion 27

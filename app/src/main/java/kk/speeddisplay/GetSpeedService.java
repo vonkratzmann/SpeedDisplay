@@ -217,8 +217,7 @@ public class GetSpeedService extends Service {
 
                     /* convert speed from metres/sec to km/hour */
                     speed = speed * 3600F / 1000F;
-                    if (MyDebug.DEBUG_LOCATION_SERVICE)
-                        Log.d(TAG, "Speed = " + Float.toString(speed));
+                    if (MyDebug.DEBUG_LOCATION_SERVICE)Log.d(TAG, "Speed = " + Float.toString(speed));
 
                     //check if speed has changed, only process if there has been a change
                     if (savedSpeed != speed) {
@@ -331,8 +330,6 @@ public class GetSpeedService extends Service {
 
             /* update status of mMainActivityRunning */
             mMainActivityRunning = intent.getBooleanExtra(getString(R.string.extra_key_main_running), false);
-            //Log.d(TAG, "onReceive rate: " + rate + " resetMaxSpeed; " + resetMaxSpeed +
-            //        " mMainActivityRunning: " + mMainActivityRunning);
         }
     }
 
