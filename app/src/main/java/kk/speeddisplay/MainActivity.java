@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity implements
 
     /* displays maximum speed recorded to date */
     private TextView mMaxSpeedTextView;
-    private float mMaxSpeed;
 
     /* gets speed updates from foreground service */
     private MySpeedBroadcastReceiver mSpeedBroadcastReceiver;
@@ -99,10 +98,8 @@ public class MainActivity extends AppCompatActivity implements
         checkPermissions();
 
         //display maximum speed obtained from saved value in preferences
-        mMaxSpeed = Preferences.getPrefMaxSpeed(
-
-                getApplicationContext());
-        String formattedMaxSpeed = Utilities.formatSpeed(this, mMaxSpeed);
+        float maxSpeed = Preferences.getPrefMaxSpeed(getApplicationContext());
+        String formattedMaxSpeed = Utilities.formatSpeed(this, maxSpeed);
         mMaxSpeedTextView.setText(formattedMaxSpeed);
     }
 
@@ -119,8 +116,9 @@ public class MainActivity extends AppCompatActivity implements
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onResume()");
 
         /* screen now visible, send:
-         * flag saying activity is running */
-        sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true);
+         * flag saying activity is running
+         * flag saying not to reset max speed*/
+        sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true, false);
     }
 
     @Override
@@ -129,8 +127,9 @@ public class MainActivity extends AppCompatActivity implements
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onPause()");
 
         /* screen now not visible, send:
-         * flag saying activity is not running */
-        sendRateToService(mNotRunningUpdateRate.getRateInMilliSecs(), false);
+         * flag saying activity is not running
+         * flag saying not to reset max speed */
+        sendRateToService(mNotRunningUpdateRate.getRateInMilliSecs(), false, false);
     }
 
 
@@ -213,17 +212,18 @@ public class MainActivity extends AppCompatActivity implements
      *
      * @param rate update rate to be sent to the location provider
      */
-    private void sendRateToService(long rate, boolean activityRunning) {
+    private void sendRateToService(long rate, boolean activityRunning, boolean maxSpeedReset) {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "sendRateToService()");
 
 
         /* set up broadcast to pass the running update rate to the service*/
-        Intent updateRate = new Intent();
-        updateRate.setAction(getString(R.string.ACTION_SendRateToService));
-        updateRate.putExtra(getString(R.string.extra_key_rate_value), rate);
-        updateRate.putExtra(getString(R.string.extra_key_main_running), activityRunning);
+        Intent updateService = new Intent();
+        updateService.setAction(getString(R.string.ACTION_SendRateToService));
+        updateService.putExtra(getString(R.string.extra_key_rate_value), rate);
+        updateService.putExtra(getString(R.string.extra_key_main_running), activityRunning);
+        updateService.putExtra(getString(R.string.extra_key_max_speed_reset), maxSpeedReset);
         LocalBroadcastManager.getInstance(getApplicationContext())
-                .sendBroadcast(updateRate);
+                .sendBroadcast(updateService);
     }
 
 
@@ -325,14 +325,13 @@ public class MainActivity extends AppCompatActivity implements
         /* check if request to reset maximum speed */
         if (id == R.id.max_reset) {
             /* if user has just cleared the max speed
-             * assume activity must be running, so send running rate, and send a flag to say
-             * it is running, saves maximum speed in preferences, display new max speed.
+             * so send running rate,
+             * assume activity must be running,
+             * send a flags to say activity running and reset max speed to service
+             * service saves maximum speed in preferences,
+             * max speed will be displayed when service sends next speed and max speed update
              */
-            sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true);
-            mMaxSpeed = 0.0F;
-            Preferences.saveMaxSpeed(getApplicationContext(), mMaxSpeed);
-            String formattedMaxSpeed = Utilities.formatSpeed(this, mMaxSpeed);
-            mMaxSpeedTextView.setText(formattedMaxSpeed);
+            sendRateToService(mRunningUpdateRate.getRateInMilliSecs(), true, true);
             return true;
         }
         /* check if request to navigate to the settings screen */
@@ -378,14 +377,12 @@ public class MainActivity extends AppCompatActivity implements
             SpannableString spannedSpeed = Utilities.spanSpeed(formattedSpeed);
             mCurrentSpeedTextView.setText(spannedSpeed);
 
-            //check if previous max speed has been exceeded
-            if (speed > mMaxSpeed) {
-                mMaxSpeed = speed;
-                //save new maximum speed to shared preferences, format and display it
-                Preferences.saveMaxSpeed(getApplicationContext(), mMaxSpeed);
-                String formattedMaxSpeed = Utilities.formatSpeed(context, mMaxSpeed);
-                mMaxSpeedTextView.setText(formattedMaxSpeed);
-            }
+            //get the max speed, format the speed, and display it
+
+            float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
+            String formattedMaxSpeed = Utilities.formatSpeed(context, maxSpeed);
+            mMaxSpeedTextView.setText(formattedMaxSpeed);
+
         }
         //endregion
     }
