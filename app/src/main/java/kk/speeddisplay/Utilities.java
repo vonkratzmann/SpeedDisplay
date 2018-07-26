@@ -33,13 +33,31 @@ public final class Utilities {
         if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "formatSpeed()");
 
         //get the default format to display speed
-        int speedFormatResourceId = R.string.speed_format_kph;
+        String formatSpeed = context.getString(R.string.speed_format);
 
         if (!Preferences.isMetric(context)) {
             speed = kphToMph(speed);
-            speedFormatResourceId = R.string.speed_format_mph;
         }
-        return String.format(Locale.UK, context.getString(speedFormatResourceId), speed);
+        return String.format(Locale.UK, formatSpeed, speed);
+    }
+    /**
+     * Speed is stored km/hour in app. Depending on the user's preference,
+     * the app may need to display the speed in miles/hour. This method will perform that
+     * conversion if necessary and present the units in the correct format.
+     *
+     * @param context Android Context to access preferences and resources
+     * @return Formatted units
+     */
+    public static String formatUnits(Context context) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "formatUnits()");
+
+        //get the default format to display speed
+        int formatResourceId = R.string.units_metric;
+
+        if (!Preferences.isMetric(context)) {
+            formatResourceId = R.string.units_imperial;
+        }
+        return context.getString(formatResourceId);
     }
 
     /**

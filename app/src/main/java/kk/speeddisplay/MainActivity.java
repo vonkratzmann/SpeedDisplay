@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -52,9 +53,11 @@ public class MainActivity extends AppCompatActivity implements
 
     /* displays current speed from the location provider in the foreground service */
     private TextView mCurrentSpeedTextView;
+    private TextView mCurrentSpeedUnitsTextView;
 
     /* displays maximum speed recorded to date */
     private TextView mMaxSpeedTextView;
+    private TextView mMaxSpeedUnitsTextView;
 
     /* gets speed updates from foreground service */
     private MySpeedBroadcastReceiver mSpeedBroadcastReceiver;
@@ -82,7 +85,13 @@ public class MainActivity extends AppCompatActivity implements
         setSupportActionBar(toolbar);
 
         mCurrentSpeedTextView = findViewById(R.id.tv_CurrentSpeed);
+        mCurrentSpeedUnitsTextView = findViewById(R.id.tv_CurrentSpeedUnits);
         mMaxSpeedTextView = findViewById(R.id.tv_MaxSpeed);
+        mMaxSpeedUnitsTextView = findViewById(R.id.tv_MaxSpeed_units);
+
+
+       // Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/DSEGClassic-BoldItalic.ttf");
+        //mMaxSpeedTextView.setTypeface(typeface);
 
         //register broadcast receiver to receive speed updates from service
         mSpeedBroadcastReceiver = new MySpeedBroadcastReceiver();
@@ -96,11 +105,6 @@ public class MainActivity extends AppCompatActivity implements
 
         //check permissions and if ok start foreground service
         checkPermissions();
-
-        //display maximum speed obtained from saved value in preferences
-        float maxSpeed = Preferences.getPrefMaxSpeed(getApplicationContext());
-        String formattedMaxSpeed = Utilities.formatSpeed(this, maxSpeed);
-        mMaxSpeedTextView.setText(formattedMaxSpeed);
     }
 
 
@@ -327,7 +331,7 @@ public class MainActivity extends AppCompatActivity implements
             /* if user has just cleared the max speed
              * so send running rate,
              * assume activity must be running,
-             * send a flags to say activity running and reset max speed to service
+             * send flags to say activity running and reset max speed
              * service saves maximum speed in preferences,
              * max speed will be displayed when service sends next speed and max speed update
              */
@@ -371,18 +375,17 @@ public class MainActivity extends AppCompatActivity implements
         public void onReceive(Context context, Intent intent) {
             if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onReceive()");
 
-            // get the speed, format the speed, make spannable and display it
+            // get the speed, format the speed, display it and display the units
             Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
             String formattedSpeed = Utilities.formatSpeed(context, speed);
-            SpannableString spannedSpeed = Utilities.spanSpeed(formattedSpeed);
-            mCurrentSpeedTextView.setText(spannedSpeed);
+            mCurrentSpeedTextView.setText(formattedSpeed);
+            mCurrentSpeedUnitsTextView.setText(Utilities.formatUnits(context));
 
-            //get the max speed, format the speed, and display it
-
+            //get the max speed, format the speed, display it and display units
             float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
             String formattedMaxSpeed = Utilities.formatSpeed(context, maxSpeed);
             mMaxSpeedTextView.setText(formattedMaxSpeed);
-
+            mMaxSpeedUnitsTextView.setText(Utilities.formatUnits(context));
         }
         //endregion
     }

@@ -7,59 +7,83 @@
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
-    tools:layout_editor_absoluteY="81dp"
     tools:showIn="@layout/activity_main">
 
     <TextView
         android:id="@+id/tv_CurrentSpeed"
         style="@style/LargeTextView"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:background="@layout/rounded_border_tv"
-        android:gravity="center"
-        android:text="@string/speed"
-        app:layout_constraintBottom_toTopOf="@+id/tv_MaxSpeedTitle"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:fontFamily="@font/dseg7modern_bolditalic"
+        android:gravity="end|bottom"
+        app:layout_constraintBottom_toTopOf="@id/tv_MaxSpeedTitle"
+        app:layout_constraintHorizontal_bias="0.54"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/tv_CurrentSpeedUnits"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="spread_inside"/>
+        app:layout_constraintVertical_bias="0.50"
+        tools:text="@string/speed"/>
+
+    <TextView
+        android:id="@+id/tv_CurrentSpeedUnits"
+        style="@style/MediumTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="start|bottom"
+        app:layout_constraintBottom_toBottomOf="@+id/tv_CurrentSpeed"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toRightOf="@id/tv_CurrentSpeed"
+        app:layout_constraintRight_toRightOf="parent"
+        tools:fontFamily="sans-serif-condensed"
+        tools:text="@string/units_metric"/>
 
     <TextView
         android:id="@+id/tv_MaxSpeedTitle"
         style="@style/MediumTextView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:background="@layout/rounded_border_tv"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
         android:gravity="center"
         android:text="@string/max_speed_title"
-        app:layout_constraintBottom_toTopOf="@+id/guideline"
+        app:layout_constraintBottom_toTopOf="@+id/guideline_horizontal"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.50"
-        app:layout_constraintStart_toStartOf="parent"
-        />
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <TextView
         android:id="@+id/tv_MaxSpeed"
         style="@style/MediumTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:background="@layout/rounded_border_tv"
-        android:gravity="center"
-        android:text="@string/max_speed_title"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.50"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"/>
+        android:clickable="false"
+        android:fontFamily="@font/dseg7modern_bolditalic"
+        android:gravity="end|bottom"
+        app:layout_constraintHorizontal_bias="0.54"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/tv_MaxSpeed_units"
+        app:layout_constraintTop_toBottomOf="@+id/tv_MaxSpeedTitle"
+        tools:text="@string/speed"/>
+
+    <TextView
+        android:id="@+id/tv_MaxSpeed_units"
+        style="@style/MediumTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="start|bottom"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintLeft_toRightOf="@id/tv_MaxSpeed"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_MaxSpeed"
+        tools:text="@string/units_metric"/>
 
     <android.support.constraint.Guideline
-        android:id="@+id/guideline"
+        android:id="@+id/guideline_horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.75"/>
+        app:layout_constraintGuide_percent="0.75"
+        app:layout_constraintStart_toStartOf="parent"/>
 
 </android.support.constraint.ConstraintLayout>
