@@ -80,6 +80,9 @@
     <string name="extra_key_main_running" translatable="false">"main_running"</string>
     <string name="extra_key_max_speed_reset" translatable="false">"max_reset"</string>
 
+    <!-- Notification strings -->
+    <string name="notifySpeedChannel" translatable="false">"notifySpeed"</string>
+
     <!-- error strings -->
     <string name="error">Error</string>
     <string name="permission_denied">Permission Denied</string>

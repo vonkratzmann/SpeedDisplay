@@ -1,6 +1,9 @@
 package kk.speeddisplay;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -8,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -154,7 +158,8 @@ public class GetSpeedService extends Service {
         super.onDestroy();
 
         /* stop location updates */
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        if (mLocationCallback != null)
+            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
 
         //unregister broadcast receiver for update rate for location provider
         LocalBroadcastManager.getInstance(getApplicationContext())
@@ -179,11 +184,28 @@ public class GetSpeedService extends Service {
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, 0);
 
-        Notification notification = new NotificationCompat.Builder(getApplicationContext(), "default")
+        //If Android 8.0 (API level 26), must implement one or more notification channels
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel notifySpeedChannel = new
+                    NotificationChannel(Constant.NOTIFY_CHANNEL_ID,
+                    "Speed", NotificationManager.IMPORTANCE_DEFAULT);
+
+            //Configure the channel's initial settings
+            notifySpeedChannel.setLightColor(Color.GREEN);
+            //Submit the channel to the Notification Manager
+            NotificationManager notificationManager =
+                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(notifySpeedChannel);
+            }
+        }
+
+       Notification notification = new NotificationCompat.Builder(getApplicationContext(), "default")
                 .setContentTitle(getText(R.string.notification_title))
                 .setContentText(getText(R.string.notification_message))
                 .setSmallIcon(R.drawable.speed)
                 .setContentIntent(pendingIntent)
+                .setChannelId(Constant.NOTIFY_CHANNEL_ID)               //for android 8.0
                 .setTicker(getText(R.string.notification_ticker_text))
                 .build();
 
@@ -237,14 +259,13 @@ public class GetSpeedService extends Service {
     }
 
 
-        /**
-         *
-         * @param maxSpeed  new max speed to be saved
-         */
-        private void saveMaxSpeed (float maxSpeed){
-            //save new maximum speed to shared preferences
-            Preferences.saveMaxSpeed(getApplicationContext(), maxSpeed);
-        }
+    /**
+     * @param maxSpeed new max speed to be saved
+     */
+    private void saveMaxSpeed(float maxSpeed) {
+        //save new maximum speed to shared preferences
+        Preferences.saveMaxSpeed(getApplicationContext(), maxSpeed);
+    }
 
 
     @Nullable
