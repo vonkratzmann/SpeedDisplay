@@ -149,23 +149,6 @@ public class GetSpeedService extends Service {
         return START_STICKY;
     }
 
-    /**
-     * Start the updates from the location provider
-     */
-    void requestUpdates(long rate) {
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "requestUpdates()");
-
-        //set the updates rates into the LocationRequest mLocationRequest
-        setLocationUpdateRate(rate);
-
-        try {
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-        } catch (
-                SecurityException securityException) {
-            Log.e(TAG, getString(R.string.permission_denied));
-        }
-    }
-
 
     @Override
     public void onDestroy() {
@@ -186,6 +169,43 @@ public class GetSpeedService extends Service {
     //endregion
 
     //region Methods
+    /**
+     * Start the updates from the location provider
+     */
+    void requestUpdates(long rate) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "requestUpdates()");
+
+        //set the updates rates into the LocationRequest mLocationRequest
+        setLocationUpdateRate(rate);
+
+        try {
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+        } catch (
+                SecurityException securityException) {
+            Log.e(TAG, getString(R.string.permission_denied));
+        }
+    }
+
+
+    /**
+     * Updates the LocationRequest for the rate at which the location provider provides updates
+     * always sets the accuracy to high
+     * update rate is sent from the activity at startup, or
+     * when the activity state changes, or when it has been changed by the user
+     *
+     * @param rate rate at which location provider provides updates
+     */
+    private void setLocationUpdateRate(long rate) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "setLocationUpdateRate()");
+
+        mLocationRequest.setInterval(rate);
+        mLocationRequest.setFastestInterval(rate);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+    }
+
 
     /**
      * send notification to the main activity and run as a foreground service
@@ -327,26 +347,6 @@ public class GetSpeedService extends Service {
         intentFilter.addAction(getString(R.string.ACTION_SendRateToService));
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(mRateBroadcastReceiver, intentFilter);
-    }
-
-
-    /**
-     * Updates the LocationRequest for the rate at which the location provider provides updates
-     * always sets the accuracy to high
-     * update rate is sent from the activity at startup, or
-     * when the activity state changes, or when it has been changed by the user
-     *
-     * @param rate rate at which location provider provides updates
-     */
-    private void setLocationUpdateRate(long rate) {
-        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "setLocationUpdateRate()");
-
-        mLocationRequest.setInterval(rate);
-        mLocationRequest.setFastestInterval(rate);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(mLocationRequest);
     }
     //endregion
 
