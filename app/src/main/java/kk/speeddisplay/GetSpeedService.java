@@ -62,7 +62,9 @@ public class GetSpeedService extends Service {
     private volatile HandlerThread mHandlerThread;
     private ServiceHandler mServiceHandler;
 
-    // class that stores the update rate
+    /* class that stores the update rate
+     * used her as a convenience to access methods in UpdateRate
+     * do not store the rate in mUpdateRate */
     private UpdateRate mUpdateRate;
     //endregion
 
@@ -131,24 +133,37 @@ public class GetSpeedService extends Service {
                 startLocationService();
 
                 /* set the update rate in  milliseconds for the location provider to the default value.
-                 * Fused location client does not work without an update rate before it is started
-                 * The broadcasts from the main activity will update with the real update rate*/
+                 * The broadcasts from the main activity will update with the real update rate,
+                 * the onResume() method in MainActivity sends the update rate to ths service.
+                 */
                 Context context = getApplicationContext();
-                setLocationUpdateRate(mUpdateRate.getDefaultRunningRateInMilliSecs(context));
 
+                long rate = mUpdateRate.getDefaultRunningRateInMilliSecs(context);
                 // start the updates from the location provider
-                try {
-                    mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-                } catch (
-                        SecurityException securityException) {
-                    Log.e(TAG, getString(R.string.permission_denied));
-                }
+                requestUpdates(rate);
             }
         });
         /* If the system kills the service after onStartCommand() returns,
          * recreate the service and call onStartCommand()
          */
         return START_STICKY;
+    }
+
+    /**
+     * Start the updates from the location provider
+     */
+    void requestUpdates(long rate) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "requestUpdates()");
+
+        //set the updates rates into the LocationRequest mLocationRequest
+        setLocationUpdateRate(rate);
+
+        try {
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+        } catch (
+                SecurityException securityException) {
+            Log.e(TAG, getString(R.string.permission_denied));
+        }
     }
 
 
@@ -200,7 +215,7 @@ public class GetSpeedService extends Service {
             }
         }
 
-       Notification notification = new NotificationCompat.Builder(getApplicationContext(), "default")
+        Notification notification = new NotificationCompat.Builder(getApplicationContext(), "default")
                 .setContentTitle(getText(R.string.notification_title))
                 .setContentText(getText(R.string.notification_message))
                 .setSmallIcon(R.drawable.speed)
@@ -263,6 +278,8 @@ public class GetSpeedService extends Service {
      * @param maxSpeed new max speed to be saved
      */
     private void saveMaxSpeed(float maxSpeed) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "saveMaxSpeed()");
+
         //save new maximum speed to shared preferences
         Preferences.saveMaxSpeed(getApplicationContext(), maxSpeed);
     }
@@ -314,7 +331,7 @@ public class GetSpeedService extends Service {
 
 
     /**
-     * Updates the rate at which the location provider provides updates on location
+     * Updates the LocationRequest for the rate at which the location provider provides updates
      * always sets the accuracy to high
      * update rate is sent from the activity at startup, or
      * when the activity state changes, or when it has been changed by the user
@@ -339,7 +356,6 @@ public class GetSpeedService extends Service {
 
         /**
          * gets the update rate from the intent and updates the location provider
-         * save it in the preferences
          * updates flag indicating if main activity is running or not running
          * checks if reset max speed requested by the user
          *
@@ -354,8 +370,10 @@ public class GetSpeedService extends Service {
             long defaultRate = mUpdateRate.getDefaultRunningRateInMilliSecs(context);
             //get the update rate from the intent
             long rate = intent.getLongExtra(getString(R.string.extra_key_rate_value), defaultRate);
-            /* update the location provider */
-            setLocationUpdateRate(rate);
+
+            //request updates form the fusion provider with the new update rate
+            requestUpdates(rate);
+
             /* update status of mMainActivityRunning
              * if UI was not running & changed to running, send the latest speeds to be displayed */
             if (!mMainActivityRunning && intent.getBooleanExtra(getString(R.string.extra_key_main_running), false)) {
@@ -363,7 +381,12 @@ public class GetSpeedService extends Service {
             }
             //update running flag
             mMainActivityRunning = intent.getBooleanExtra(getString(R.string.extra_key_main_running), false);
-            //check if max speed reset by the user
+
+            /* check if maxSpeed reset by the user
+             * if it has clear maxSpeed, save it in the preferences,
+             * as MainActivity does not do any processing on maxSpeed, it only displays it.
+             * Send back to MainActivity so MainActivity displays the new reset maxSpeed.
+             */
             if (intent.getBooleanExtra(getString(R.string.extra_key_max_speed_reset), false)) {
                 mMaxSpeed = 0.0F;
                 saveMaxSpeed(mMaxSpeed);
