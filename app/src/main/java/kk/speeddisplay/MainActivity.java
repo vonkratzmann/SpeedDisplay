@@ -25,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * MainActivity
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements
         mMaxSpeedUnitsTextView = findViewById(R.id.tv_MaxSpeed_units);
 
 
-       // Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/DSEGClassic-BoldItalic.ttf");
+        // Typeface typeface = Typeface.createFromAsset(getAssets(), "fonts/DSEGClassic-BoldItalic.ttf");
         //mMaxSpeedTextView.setTypeface(typeface);
 
         //register broadcast receiver to receive speed updates from service
@@ -207,6 +208,12 @@ public class MainActivity extends AppCompatActivity implements
         // unregister broadcast receiver for speed updates
         LocalBroadcastManager.getInstance(this)
                 .unregisterReceiver(mSpeedBroadcastReceiver);
+
+        //Stop background service
+        if (mService != null) {
+            stopService(mService);
+            mService = null;
+        }
     }
 
 
@@ -253,8 +260,17 @@ public class MainActivity extends AppCompatActivity implements
 
         switch (requestCode) {
             case 10:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                if (grantResults.length > 0 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     getMyLocation();
+                } else {
+                    // permission denied exit, tell user
+                    Toast.makeText(this, getString(R.string.permission_denied) +
+                            getString(R.string.exiting), Toast.LENGTH_LONG).show();
+                    shutDown();
+                    finish();
+                }
+                return;
         }
     }
 
@@ -348,45 +364,41 @@ public class MainActivity extends AppCompatActivity implements
         if (id == R.id.quit) {
             //terminate service and registered receivers
             shutDown();
-            //Stop background service
-            if (mService != null) {
-                stopService(mService);
-                mService = null;
-            }
             finish();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
-    //endregion
 
-    //region InnerClasses
-    public class MySpeedBroadcastReceiver extends BroadcastReceiver {
-        private final String TAG = MySpeedBroadcastReceiver.class.getSimpleName();
+//endregion
 
-        /**
-         * Retrieves speed and displays speed
-         * ensures the correct units are displayed with the correct format
-         *
-         * @param context context
-         * @param intent  source of broadcast
-         */
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onReceive()");
+//region InnerClasses
+public class MySpeedBroadcastReceiver extends BroadcastReceiver {
+    private final String TAG = MySpeedBroadcastReceiver.class.getSimpleName();
 
-            // get the speed, format the speed, display it and display the units
-            Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
-            String formattedSpeed = Utilities.formatSpeed(context, speed);
-            mCurrentSpeedTextView.setText(formattedSpeed);
-            mCurrentSpeedUnitsTextView.setText(Utilities.formatUnits(context));
+    /**
+     * Retrieves speed and displays speed
+     * ensures the correct units are displayed with the correct format
+     *
+     * @param context context
+     * @param intent  source of broadcast
+     */
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (MyDebug.DEBUG_METHOD_ENTRY) Log.d(TAG, "onReceive()");
 
-            //get the max speed, format the speed, display it and display units
-            float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
-            String formattedMaxSpeed = Utilities.formatSpeed(context, maxSpeed);
-            mMaxSpeedTextView.setText(formattedMaxSpeed);
-            mMaxSpeedUnitsTextView.setText(Utilities.formatUnits(context));
-        }
-        //endregion
+        // get the speed, format the speed, display it and display the units
+        Float speed = intent.getFloatExtra(getString(R.string.extra_key_speed), 0.0F);
+        String formattedSpeed = Utilities.formatSpeed(context, speed);
+        mCurrentSpeedTextView.setText(formattedSpeed);
+        mCurrentSpeedUnitsTextView.setText(Utilities.formatUnits(context));
+
+        //get the max speed, format the speed, display it and display units
+        float maxSpeed = intent.getFloatExtra(getString(R.string.extra_key_max_speed), 0.0F);
+        String formattedMaxSpeed = Utilities.formatSpeed(context, maxSpeed);
+        mMaxSpeedTextView.setText(formattedMaxSpeed);
+        mMaxSpeedUnitsTextView.setText(Utilities.formatUnits(context));
     }
+    //endregion
+}
 }
