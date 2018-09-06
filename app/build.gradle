@@ -6,7 +6,7 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
 android {
     signingConfigs {
-        Build2018_06_18 {
+        config {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
             storeFile file(keystoreProperties['storeFile'])
@@ -18,8 +18,8 @@ android {
         applicationId "kk.speeddisplay"
         minSdkVersion 17
         targetSdkVersion 27
-        versionCode 5
-        versionName '5.0'
+        versionCode 7
+        versionName '7.0'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
@@ -28,7 +28,7 @@ android {
             shrinkResources true
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.Build2018_06_18
+            signingConfig signingConfigs.config
         }
     }
     productFlavors {
